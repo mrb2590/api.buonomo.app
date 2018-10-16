@@ -13,6 +13,15 @@ use Illuminate\Http\Request;
 |
 */
 
-Route::middleware('auth:api')->get('/user', function (Request $request) {
-    return $request->user();
+// Routes require authentication
+Route::middleware(['auth:api'])->prefix('v1')->group(function() {
+
+    /* Users */
+
+    // Fetch current user
+    Route::get('/user', 'UserController@fetchCurrent')->name('user.fetch');
+
+    // Fetch
+    Route::get('/users/{user?}', 'UserController@fetch')->name('users.fetch');
+
 });
