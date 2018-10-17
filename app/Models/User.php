@@ -18,7 +18,7 @@ class User extends Authenticatable implements MustVerifyEmail
      *
      * @var array
      */
-    protected $dates = ['deleted_at'];
+    protected $dates = ['email_verified_at', 'deleted_at'];
 
     /**
      * The attributes that should be cast to native types.

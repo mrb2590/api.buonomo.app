@@ -14316,6 +14316,8 @@ __webpack_require__(16);
 
 window.Vue = __webpack_require__(39);
 
+Vue.config.productionTip = false;
+
 /**
  * Next, we will create a fresh Vue application instance and attach it to
  * the page. Then, you may begin adding components to this application
@@ -14324,15 +14326,15 @@ window.Vue = __webpack_require__(39);
 
 Vue.component('example-component', __webpack_require__(42));
 
-var app = new Vue({
-    el: '#app'
-});
-
 Vue.component('passport-clients', __webpack_require__(45));
 
 Vue.component('passport-authorized-clients', __webpack_require__(51));
 
 Vue.component('passport-personal-access-tokens', __webpack_require__(56));
+
+var app = new Vue({
+    el: '#app'
+});
 
 /***/ }),
 /* 16 */

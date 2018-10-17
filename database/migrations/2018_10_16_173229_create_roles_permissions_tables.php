@@ -123,6 +123,14 @@ class CreateRolesPermissionsTables extends Migration
             'updated_at' => Carbon::now()->toDateTimeString()
         ]);
 
+        $restoreUsersPermissionId = DB::table('permissions')->insertGetId([
+            'name' => 'restore_users',
+            'display_name' => 'Restore users',
+            'description' => 'Restore users.',
+            'created_at' => Carbon::now()->toDateTimeString(),
+            'updated_at' => Carbon::now()->toDateTimeString()
+        ]);
+
         // Super user permissions
         DB::table('permission_role')->insert([
             'permission_id' => $manageAPIClientsPermissionId,
@@ -152,6 +160,37 @@ class CreateRolesPermissionsTables extends Migration
         DB::table('permission_role')->insert([
             'permission_id' => $deleteUsersPermissionId,
             'role_id' => $superRoleId
+        ]);
+
+        DB::table('permission_role')->insert([
+            'permission_id' => $restoreUsersPermissionId,
+            'role_id' => $superRoleId
+        ]);
+
+        // Admin permissions
+        DB::table('permission_role')->insert([
+            'permission_id' => $createUsersPermissionId,
+            'role_id' => $adminRoleId
+        ]);
+
+        DB::table('permission_role')->insert([
+            'permission_id' => $fetchUsersPermissionId,
+            'role_id' => $adminRoleId
+        ]);
+
+        DB::table('permission_role')->insert([
+            'permission_id' => $updateUsersPermissionId,
+            'role_id' => $adminRoleId
+        ]);
+
+        DB::table('permission_role')->insert([
+            'permission_id' => $trashUsersPermissionId,
+            'role_id' => $adminRoleId
+        ]);
+
+        DB::table('permission_role')->insert([
+            'permission_id' => $restoreUsersPermissionId,
+            'role_id' => $adminRoleId
         ]);
     }
 
