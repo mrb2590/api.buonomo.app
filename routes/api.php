@@ -18,7 +18,7 @@ Route::middleware(['auth:api', 'verified'])->prefix('v1')->group(function() {
 
     /* Users */
 
-    // Fetch current user
+    // Fetch the current user
     Route::get('/user', 'UserController@fetchCurrent')->name('user.fetch');
 
     // Fetch all or a single user
@@ -41,7 +41,7 @@ Route::middleware(['auth:api', 'verified'])->prefix('v1')->group(function() {
 
     /* User roles */
 
-    // Fetch current user roles
+    // Fetch the current user's roles
     Route::get('/user/roles', 'UserRoleController@fetchCurrent')->name('user.roles.fetch');
 
     // Fetch a single user's roles
@@ -52,5 +52,34 @@ Route::middleware(['auth:api', 'verified'])->prefix('v1')->group(function() {
 
     // Remove a user's role
     Route::delete('/users/{user}/roles', 'UserRoleController@remove')->name('users.roles.remove');
+
+    /* Drive Folders */
+
+    // Fetch the current user's folder
+    Route::get('/user/drive/folder', 'Drive\FolderController@fetchCurrent')
+        ->name('user.drive.folder.fetch');
+
+    // Fetch all or a single folder
+    Route::get('/drive/folders/{folder?}', 'Drive\FolderController@fetch')
+        ->name('drive.folders.fetch');
+
+    // Create a folder
+    Route::post('/drive/folders', 'Drive\FolderController@store')->name('drive.folders.create');
+
+    // Update a folder
+    Route::patch('/drive/folders/{folder}', 'Drive\FolderController@update')
+        ->name('drive.folders.update');
+
+    // Trash a folder
+    Route::delete('/drive/folders/{folder}/trash', 'Drive\FolderController@trash')
+        ->name('drive.folders.trash');
+
+    // Delete a trashed folder
+    Route::delete('/drive/folders/{trashedFolder}', 'Drive\FolderController@delete')
+        ->name('drive.folders.delete');
+
+    // Restore a trashed folder
+    Route::post('/drive/folders/{trashedFolder}/restore', 'Drive\FolderController@restore')
+        ->name('drive.folders.restore');
 
 });

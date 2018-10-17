@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Drive\Folder;
 use App\Models\User;
 use Carbon\Carbon;
 use Faker\Factory as Faker;
@@ -31,8 +32,14 @@ class DatabaseSeeder extends Seeder
 
         $user->assignRole('api_manager');
         $user->assignRole('user_manager');
+        $user->assignRole('drive_manager');
+
+        $user->createRootFolder();
 
         // Create 50 random users
-        factory(User::class, 50)->create();
+        factory(User::class, 50)->create()->each(function($user) use ($faker) {
+            // $user->assignRole($faker->randomElement(['administrator', 'member']));
+            $user->createRootFolder();
+        });
     }
 }

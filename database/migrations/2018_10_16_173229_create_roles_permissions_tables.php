@@ -34,21 +34,26 @@ class CreateRolesPermissionsTables extends Migration
         Schema::create('permission_role', function (Blueprint $table) {
             $table->integer('permission_id')->unsigned();
             $table->integer('role_id')->unsigned();
+
             $table->foreign('permission_id')->references('id')->on('permissions')
-                ->onDelete('cascade');
-            $table->foreign('role_id')->references('id')->on('roles')->onDelete('cascade');
+                ->onDelete('cascade')->onUpdate('cascade');
+            $table->foreign('role_id')->references('id')->on('roles')
+                ->onDelete('cascade')->onUpdate('cascade');
             $table->primary(['permission_id', 'role_id']);
         });
 
         Schema::create('role_user', function (Blueprint $table) {
             $table->integer('role_id')->unsigned();
             $table->integer('user_id')->unsigned();
-            $table->foreign('role_id')->references('id')->on('roles')->onDelete('cascade');
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+
+            $table->foreign('role_id')->references('id')->on('roles')
+                ->onDelete('cascade')->onUpdate('cascade');
+            $table->foreign('user_id')->references('id')->on('users')
+                ->onDelete('cascade')->onUpdate('cascade');
             $table->primary(['role_id', 'user_id']);
         });
 
-        // Create roles
+        // Roles
         $apiManagerRoleId = DB::table('roles')->insertGetId([
             'name' => 'api_manager',
             'display_name' => 'API Manager',
@@ -65,6 +70,14 @@ class CreateRolesPermissionsTables extends Migration
             'updated_at' => Carbon::now()->toDateTimeString()
         ]);
 
+        $driveManagerRoleId = DB::table('roles')->insertGetId([
+            'name' => 'drive_manager',
+            'display_name' => 'Drive Manager',
+            'description' => 'Manages drive accounts.',
+            'created_at' => Carbon::now()->toDateTimeString(),
+            'updated_at' => Carbon::now()->toDateTimeString()
+        ]);
+
         // API client permissions
         $manageAPIClientsPermissionId = DB::table('permissions')->insertGetId([
             'name' => 'manage_api_clients',
@@ -74,7 +87,7 @@ class CreateRolesPermissionsTables extends Migration
             'updated_at' => Carbon::now()->toDateTimeString()
         ]);
 
-        // User management permissions
+        // User permissions
         $createUsersPermissionId = DB::table('permissions')->insertGetId([
             'name' => 'create_users',
             'display_name' => 'Create new users',
@@ -148,13 +161,62 @@ class CreateRolesPermissionsTables extends Migration
             'updated_at' => Carbon::now()->toDateTimeString()
         ]);
 
-        // API Manager permissions
+        // Folder permissions
+        $createFoldersPermissionId = DB::table('permissions')->insertGetId([
+            'name' => 'create_folders',
+            'display_name' => 'Create new folders',
+            'description' => 'Create new folders.',
+            'created_at' => Carbon::now()->toDateTimeString(),
+            'updated_at' => Carbon::now()->toDateTimeString()
+        ]);
+
+        $fetchFoldersPermissionId = DB::table('permissions')->insertGetId([
+            'name' => 'fetch_folders',
+            'display_name' => 'Fetch folders',
+            'description' => 'Fetch folders.',
+            'created_at' => Carbon::now()->toDateTimeString(),
+            'updated_at' => Carbon::now()->toDateTimeString()
+        ]);
+
+        $updateFoldersPermissionId = DB::table('permissions')->insertGetId([
+            'name' => 'update_folders',
+            'display_name' => 'Update folders',
+            'description' => 'Update folders.',
+            'created_at' => Carbon::now()->toDateTimeString(),
+            'updated_at' => Carbon::now()->toDateTimeString()
+        ]);
+
+        $trashFoldersPermissionId = DB::table('permissions')->insertGetId([
+            'name' => 'trash_folders',
+            'display_name' => 'Trash folders',
+            'description' => 'Trash folders.',
+            'created_at' => Carbon::now()->toDateTimeString(),
+            'updated_at' => Carbon::now()->toDateTimeString()
+        ]);
+
+        $deleteFoldersPermissionId = DB::table('permissions')->insertGetId([
+            'name' => 'delete_folders',
+            'display_name' => 'Delete folders',
+            'description' => 'Delete folders.',
+            'created_at' => Carbon::now()->toDateTimeString(),
+            'updated_at' => Carbon::now()->toDateTimeString()
+        ]);
+
+        $restoreFoldersPermissionId = DB::table('permissions')->insertGetId([
+            'name' => 'restore_folders',
+            'display_name' => 'Restore folders',
+            'description' => 'Restore folders.',
+            'created_at' => Carbon::now()->toDateTimeString(),
+            'updated_at' => Carbon::now()->toDateTimeString()
+        ]);
+
+        // API Manager's role permissions
         DB::table('permission_role')->insert([
             'permission_id' => $manageAPIClientsPermissionId,
             'role_id' => $apiManagerRoleId
         ]);
 
-        // User Manager permissions
+        // User Manager's role permissions
         DB::table('permission_role')->insert([
             'permission_id' => $createUsersPermissionId,
             'role_id' => $userManagerRoleId
@@ -198,6 +260,37 @@ class CreateRolesPermissionsTables extends Migration
         DB::table('permission_role')->insert([
             'permission_id' => $removeUserRolesPermissionId,
             'role_id' => $userManagerRoleId
+        ]);
+
+        // Drive Manager's role permissions
+        DB::table('permission_role')->insert([
+            'permission_id' => $createFoldersPermissionId,
+            'role_id' => $driveManagerRoleId
+        ]);
+
+        DB::table('permission_role')->insert([
+            'permission_id' => $fetchFoldersPermissionId,
+            'role_id' => $driveManagerRoleId
+        ]);
+
+        DB::table('permission_role')->insert([
+            'permission_id' => $updateFoldersPermissionId,
+            'role_id' => $driveManagerRoleId
+        ]);
+
+        DB::table('permission_role')->insert([
+            'permission_id' => $trashFoldersPermissionId,
+            'role_id' => $driveManagerRoleId
+        ]);
+
+        DB::table('permission_role')->insert([
+            'permission_id' => $deleteFoldersPermissionId,
+            'role_id' => $driveManagerRoleId
+        ]);
+
+        DB::table('permission_role')->insert([
+            'permission_id' => $restoreFoldersPermissionId,
+            'role_id' => $driveManagerRoleId
         ]);
     }
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Drive\Folder;
 use App\Models\User;
 use App\Traits\HasPaging;
 use Carbon\Carbon;
@@ -55,7 +56,7 @@ class UserController extends Controller
     }
 
     /**
-     * Store a user.
+     * Create a user.
      *
      * @param  \Illuminate\Http\Request $request
      * @return \Illuminate\Http\Response
@@ -82,6 +83,18 @@ class UserController extends Controller
         $user->slug = str_slug(explode('@', $request->input('email'))[0], '-');
         $user->password = bcrypt($request->input('password'));
         $user->email_verified_at = $request->input('verified') ? Carbon::now() : null;
+
+        $user->save();
+
+        // Create user's root folder
+        $folder = new Folder;
+        $folder->name = $user->slug;
+        $folder->owned_by_id = $user->id;
+        $folder->created_by_id = $user->id;
+
+        $folder->save();
+
+        $user->folder_id = $folder->id;
 
         $user->save();
 
@@ -116,6 +129,10 @@ class UserController extends Controller
 
         if ($request->has('email')) {
             $user->slug = str_slug(explode('@', $data['email'])[0], '-');
+
+            $user->folder->name = $user->slug;
+
+            $user->folder->save();
         }
 
         $user->fill($data)->save();
