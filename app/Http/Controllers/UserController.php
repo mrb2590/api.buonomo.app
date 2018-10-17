@@ -22,7 +22,7 @@ class UserController extends Controller
     }
 
     /**
-     * Return the curren user.
+     * Return the current user.
      *
      * @param  \Illuminate\Http\Request $request
      * @return \Illuminate\Http\Response
@@ -71,7 +71,6 @@ class UserController extends Controller
             'last_name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:6',
-            'role' => 'required|string|exists:roles,name',
             'verified' => 'required|boolean',
         ]);
 
@@ -85,8 +84,6 @@ class UserController extends Controller
         $user->email_verified_at = $request->input('verified') ? Carbon::now() : null;
 
         $user->save();
-
-        $user->assignRole($request->input('role'));
 
         return $user;
     }

@@ -29,11 +29,10 @@ class DatabaseSeeder extends Seeder
 
         $user->save();
 
-        $user->assignRole('super_user');
+        $user->assignRole('api_manager');
+        $user->assignRole('user_manager');
 
         // Create 50 random users
-        factory(User::class, 50)->create()->each(function($user) use ($faker) {
-            $user->assignRole($faker->randomElement(['administrator', 'member']));
-        });
+        factory(User::class, 50)->create();
     }
 }

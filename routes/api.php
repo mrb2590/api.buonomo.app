@@ -39,4 +39,18 @@ Route::middleware(['auth:api', 'verified'])->prefix('v1')->group(function() {
     // Restore a trashed user
     Route::post('/users/{trashedUser}/restore', 'UserController@restore')->name('users.restore');
 
+    /* User roles */
+
+    // Fetch current user roles
+    Route::get('/user/roles', 'UserRoleController@fetchCurrent')->name('user.roles.fetch');
+
+    // Fetch a single user's roles
+    Route::get('/users/{user}/roles', 'UserRoleController@fetch')->name('users.roles.fetch');
+
+    // Assign a user a role
+    Route::post('/users/{user}/roles', 'UserRoleController@assign')->name('users.roles.assign');
+
+    // Remove a user's role
+    Route::delete('/users/{user}/roles', 'UserRoleController@remove')->name('users.roles.remove');
+
 });

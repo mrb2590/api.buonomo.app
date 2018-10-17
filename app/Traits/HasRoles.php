@@ -34,11 +34,31 @@ trait HasRoles
     }
 
     /**
+     * Check if the user does not have a role.
+     * 
+     * @param string|array $role
+     * @return boolean
+     */
+    public function doesNotHaveRole($role)
+    {
+        return ! $this->hasRole($role);
+    }
+
+    /**
      * Assign a user a role
      * 
      * @param string $role
      */
     public function assignRole($role) {
-        $this->roles()->save(Role::whereName($role)->firstOrFail());
+        $this->roles()->attach(Role::whereName($role)->firstOrFail()->id);
+    }
+
+    /**
+     * Assign a user a role
+     * 
+     * @param string $role
+     */
+    public function removeRole($role) {
+        $this->roles()->detach(Role::whereName($role)->firstOrFail()->id);
     }
 }

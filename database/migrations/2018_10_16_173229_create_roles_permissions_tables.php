@@ -49,31 +49,23 @@ class CreateRolesPermissionsTables extends Migration
         });
 
         // Create roles
-        $superRoleId = DB::table('roles')->insertGetId([
-            'name' => 'super_user',
-            'display_name' => 'Super User',
-            'description' => 'A Super User can do anything.',
+        $apiManagerRoleId = DB::table('roles')->insertGetId([
+            'name' => 'api_manager',
+            'display_name' => 'API Manager',
+            'description' => 'Manages API clients.',
             'created_at' => Carbon::now()->toDateTimeString(),
             'updated_at' => Carbon::now()->toDateTimeString()
         ]);
 
-        $adminRoleId = DB::table('roles')->insertGetId([
-            'name' => 'administrator',
-            'display_name' => 'Administrator',
-            'description' => 'Administrators are slightly more limited than super users.',
+        $userManagerRoleId = DB::table('roles')->insertGetId([
+            'name' => 'user_manager',
+            'display_name' => 'User Manager',
+            'description' => 'Manages user accounts.',
             'created_at' => Carbon::now()->toDateTimeString(),
             'updated_at' => Carbon::now()->toDateTimeString()
         ]);
 
-        $memberRoleId = DB::table('roles')->insertGetId([
-            'name' => 'member',
-            'display_name' => 'Member',
-            'description' => 'Member can perform most basic functions.',
-            'created_at' => Carbon::now()->toDateTimeString(),
-            'updated_at' => Carbon::now()->toDateTimeString()
-        ]);
-
-        // General permissions
+        // API client permissions
         $manageAPIClientsPermissionId = DB::table('permissions')->insertGetId([
             'name' => 'manage_api_clients',
             'display_name' => 'Manage API Clients',
@@ -82,7 +74,7 @@ class CreateRolesPermissionsTables extends Migration
             'updated_at' => Carbon::now()->toDateTimeString()
         ]);
 
-        // User permissions
+        // User management permissions
         $createUsersPermissionId = DB::table('permissions')->insertGetId([
             'name' => 'create_users',
             'display_name' => 'Create new users',
@@ -131,66 +123,81 @@ class CreateRolesPermissionsTables extends Migration
             'updated_at' => Carbon::now()->toDateTimeString()
         ]);
 
-        // Super user permissions
-        DB::table('permission_role')->insert([
-            'permission_id' => $manageAPIClientsPermissionId,
-            'role_id' => $superRoleId
+        // User role permissions
+        $fetchUserRolesPermissionId = DB::table('permissions')->insertGetId([
+            'name' => 'fetch_user_roles',
+            'display_name' => 'Fetch user roles',
+            'description' => 'Fetch user roles.',
+            'created_at' => Carbon::now()->toDateTimeString(),
+            'updated_at' => Carbon::now()->toDateTimeString()
         ]);
 
+        $assignUserRolesPermissionId = DB::table('permissions')->insertGetId([
+            'name' => 'assign_user_roles',
+            'display_name' => 'Assign user roles',
+            'description' => 'Assign user roles.',
+            'created_at' => Carbon::now()->toDateTimeString(),
+            'updated_at' => Carbon::now()->toDateTimeString()
+        ]);
+
+        $removeUserRolesPermissionId = DB::table('permissions')->insertGetId([
+            'name' => 'remove_user_roles',
+            'display_name' => 'Remove user roles',
+            'description' => 'Remove user roles.',
+            'created_at' => Carbon::now()->toDateTimeString(),
+            'updated_at' => Carbon::now()->toDateTimeString()
+        ]);
+
+        // API Manager permissions
+        DB::table('permission_role')->insert([
+            'permission_id' => $manageAPIClientsPermissionId,
+            'role_id' => $apiManagerRoleId
+        ]);
+
+        // User Manager permissions
         DB::table('permission_role')->insert([
             'permission_id' => $createUsersPermissionId,
-            'role_id' => $superRoleId
+            'role_id' => $userManagerRoleId
         ]);
 
         DB::table('permission_role')->insert([
             'permission_id' => $fetchUsersPermissionId,
-            'role_id' => $superRoleId
+            'role_id' => $userManagerRoleId
         ]);
 
         DB::table('permission_role')->insert([
             'permission_id' => $updateUsersPermissionId,
-            'role_id' => $superRoleId
+            'role_id' => $userManagerRoleId
         ]);
 
         DB::table('permission_role')->insert([
             'permission_id' => $trashUsersPermissionId,
-            'role_id' => $superRoleId
+            'role_id' => $userManagerRoleId
         ]);
 
         DB::table('permission_role')->insert([
             'permission_id' => $deleteUsersPermissionId,
-            'role_id' => $superRoleId
+            'role_id' => $userManagerRoleId
         ]);
 
         DB::table('permission_role')->insert([
             'permission_id' => $restoreUsersPermissionId,
-            'role_id' => $superRoleId
-        ]);
-
-        // Admin permissions
-        DB::table('permission_role')->insert([
-            'permission_id' => $createUsersPermissionId,
-            'role_id' => $adminRoleId
+            'role_id' => $userManagerRoleId
         ]);
 
         DB::table('permission_role')->insert([
-            'permission_id' => $fetchUsersPermissionId,
-            'role_id' => $adminRoleId
+            'permission_id' => $fetchUserRolesPermissionId,
+            'role_id' => $userManagerRoleId
         ]);
 
         DB::table('permission_role')->insert([
-            'permission_id' => $updateUsersPermissionId,
-            'role_id' => $adminRoleId
+            'permission_id' => $assignUserRolesPermissionId,
+            'role_id' => $userManagerRoleId
         ]);
 
         DB::table('permission_role')->insert([
-            'permission_id' => $trashUsersPermissionId,
-            'role_id' => $adminRoleId
-        ]);
-
-        DB::table('permission_role')->insert([
-            'permission_id' => $restoreUsersPermissionId,
-            'role_id' => $adminRoleId
+            'permission_id' => $removeUserRolesPermissionId,
+            'role_id' => $userManagerRoleId
         ]);
     }
 
