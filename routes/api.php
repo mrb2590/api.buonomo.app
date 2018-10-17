@@ -14,7 +14,7 @@ use Illuminate\Http\Request;
 */
 
 // Routes require authentication
-Route::middleware(['auth:api'])->prefix('v1')->group(function() {
+Route::middleware(['auth:api', 'verified'])->prefix('v1')->group(function() {
 
     /* Users */
 
@@ -23,5 +23,8 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function() {
 
     // Fetch
     Route::get('/users/{user?}', 'UserController@fetch')->name('users.fetch');
+
+    // Create
+    Route::post('/users', 'UserController@store')->name('users.create');
 
 });

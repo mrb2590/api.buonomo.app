@@ -40,6 +40,10 @@ class UserController extends Controller
      */
     public function fetch(Request $request, User $user = null)
     {
+        if ($request->user()->cannot('fetch_users')) {
+            abort(403, 'Unauthorized.');
+        }
+
         if ($user) {
             return $user;
         }

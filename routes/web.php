@@ -11,10 +11,16 @@
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
-});
+// Index
+Route::get('/', 'HomeController@index')->name('index');
 
+// Laravel auth routes
 Auth::routes(['verify' => true]);
 
-Route::get('/home', 'HomeController@index')->name('home')->middleware('verified');
+// Routes require authentication
+Route::middleware(['auth', 'verified'])->group(function() {
+
+    // Home
+    Route::get('/home', 'HomeController@home')->name('home');
+
+});

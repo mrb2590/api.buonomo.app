@@ -15,7 +15,7 @@ trait HasPaging
     protected function validatePaging(Request $request)
     {
         // Default limit
-        $limit = 25;
+        $limit = 10;
 
         if ($request->has('limit')) {
             $this->validate($request, [
