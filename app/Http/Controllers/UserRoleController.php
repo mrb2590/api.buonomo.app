@@ -60,11 +60,11 @@ class UserRoleController extends Controller
      */
     public function assign(Request $request, User $user)
     {
+        $this->validate($request, ['role' => 'required|string|exists:roles,name']);
+
         if ($request->user()->cannot('assign_user_roles')) {
             abort(403, 'Unauthorized.');
         }
-
-        $this->validate($request, ['role' => 'required|string|exists:roles,name']);
 
         $user->assignRole($request->input('role'));
 
@@ -80,11 +80,11 @@ class UserRoleController extends Controller
      */
     public function remove(Request $request, User $user)
     {
+        $this->validate($request, ['role' => 'required|string|exists:roles,name']);
+
         if ($request->user()->cannot('remove_user_roles')) {
             abort(403, 'Unauthorized.');
         }
-
-        $this->validate($request, ['role' => 'required|string|exists:roles,name']);
 
         if ($user->doesNotHaveRole($request->input('role'))) {
             abort(409, 'User does not have the specified role.');

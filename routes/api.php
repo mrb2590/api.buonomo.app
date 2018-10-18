@@ -63,12 +63,24 @@ Route::middleware(['auth:api', 'verified'])->prefix('v1')->group(function() {
     Route::get('/drive/folders/{folder?}', 'Drive\FolderController@fetch')
         ->name('drive.folders.fetch');
 
+    // Fetch all child folders of a folder
+    Route::get('/drive/folders/{folder}/folders', 'Drive\FolderController@fetchChildren')
+        ->name('drive.folders.children.fetch');
+
     // Create a folder
     Route::post('/drive/folders', 'Drive\FolderController@store')->name('drive.folders.create');
 
     // Update a folder
     Route::patch('/drive/folders/{folder}', 'Drive\FolderController@update')
         ->name('drive.folders.update');
+
+    // Move a folder
+    Route::patch('/drive/folders/{folder}/move', 'Drive\FolderController@move')
+        ->name('drive.folders.move');
+
+    // Download a folder as a zip
+    Route::get('/drive/folders/{folder}/download', 'Drive\FolderController@download')
+        ->name('drive.folders.download');
 
     // Trash a folder
     Route::delete('/drive/folders/{folder}/trash', 'Drive\FolderController@trash')

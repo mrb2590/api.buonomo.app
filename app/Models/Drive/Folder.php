@@ -33,7 +33,14 @@ class Folder extends Model
      *
      * @var array
      */
-    protected $fillable = ['name', 'owned_by_id'];
+    protected $fillable = ['name'];
+
+    /**
+     * The accessors to append to the model's array form.
+     *
+     * @var array
+     */
+    protected $appends = ['path'];
 
     /**
      * The relationships to always load.
@@ -41,6 +48,24 @@ class Folder extends Model
      * @var array
      */
     protected $with = ['owned_by', 'created_by'];
+
+    /**
+     * Get the folder path.
+     *
+     * @return string   
+     */
+    protected function getPathAttribute()
+    {
+        $path = '';
+
+        $this->traverseAllParentFolders(function($folder) use (&$path) {
+            $path = $folder->name.'/'.$path;
+        });
+
+        $path = '/'.$path;
+
+        return $path;
+    }
 
     /**
      * Get the parent folder.
@@ -72,5 +97,74 @@ class Folder extends Model
     public function created_by()
     {
         return $this->belongsTo(User::class, 'created_by_id')->publicInfo();
+    }
+
+    /**
+     * Move this folder to another folder.
+     *
+     * @param  \Illuminate\Http\Request $request
+     */
+    public function moveTo(Folder $folder)
+    {
+        $this->traverseAllChildFolders(function($childFolder) use ($folder) {
+            $childFolder->owned_by_id = $folder->owned_by_id;
+            $childFolder->save();
+        });
+    }
+
+    /**
+     * Create a zip of the folder and its contents.
+     *
+     * @return  string  The absolute path of the zip
+     */
+    public function packageZip()
+    {
+        $zip = new \ZipArchive;
+        $filename = 'temp'.time().'.zip';
+        $zipPath = config('filesystems.disks.tmp.root').'/'.$filename;
+
+        if ($zip->open($zipPath, \ZipArchive::CREATE) !== true) {
+            abort(500, 'Failed to open zip file.');
+        }
+
+        $this->traverseAllChildFolders(function($folder) use (&$zip) {
+            $zip->addEmptyDir(substr($folder->path, 1, strlen($folder->path) - 1));
+        });
+
+        if ($zip->close() !== true) {
+            abort(500, 'Failed to save zip file.');
+        }
+
+        return $zipPath;
+    }
+
+    /**
+     * Recursively traverse all parent folders.
+     *
+     * @param  \Closure $callback
+     */
+    private function traverseAllParentFolders(\Closure $callback)
+    {
+        $callback($this);
+
+        if ($this->folder_id !== null) {
+            $folder = Folder::find($this->folder_id);
+
+            $folder->traverseAllParentFolders($callback);
+        }
+    }
+
+    /**
+     * Recursively traverse all child folders.
+     *
+     * @param  \Closure $callback
+     */
+    private function traverseAllChildFolders(\Closure $callback)
+    {
+        $callback($this);
+
+        foreach ($this->folders as $folder) {
+            $folder->traverseAllChildFolders($callback);
+        }
     }
 }

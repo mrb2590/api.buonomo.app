@@ -63,10 +63,6 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
-        if ($request->user()->cannot('create_users')) {
-            abort(403, 'Unauthorized.');
-        }
-
         $this->validate($request, [
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
@@ -74,6 +70,10 @@ class UserController extends Controller
             'password' => 'required|string|min:6',
             'verified' => 'required|boolean',
         ]);
+
+        if ($request->user()->cannot('create_users')) {
+            abort(403, 'Unauthorized.');
+        }
 
         $user = new User;
 
@@ -110,16 +110,16 @@ class UserController extends Controller
      */
     public function update(Request $request, User $user)
     {
-        if ($request->user()->isNot($user) && $request->user()->cannot('update_users')) {
-            abort(403, 'Unauthorized.');
-        }
-
         $this->validate($request, [
             'first_name' => 'nullable|string|max:255',
             'last_name' => 'nullable|string|max:255',
             'email' => 'nullable|string|email|max:255|unique:users',
             'password' => 'nullable|string|min:6',
         ]);
+
+        if ($request->user()->isNot($user) && $request->user()->cannot('update_users')) {
+            abort(403, 'Unauthorized.');
+        }
 
         $data = $request->all();
 

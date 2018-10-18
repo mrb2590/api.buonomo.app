@@ -186,6 +186,22 @@ class CreateRolesPermissionsTables extends Migration
             'updated_at' => Carbon::now()->toDateTimeString()
         ]);
 
+        $moveFoldersPermissionId = DB::table('permissions')->insertGetId([
+            'name' => 'move_folders',
+            'display_name' => 'Move folders',
+            'description' => 'Move folders.',
+            'created_at' => Carbon::now()->toDateTimeString(),
+            'updated_at' => Carbon::now()->toDateTimeString()
+        ]);
+
+        $downloadFoldersPermissionId = DB::table('permissions')->insertGetId([
+            'name' => 'download_folders',
+            'display_name' => 'Download folders',
+            'description' => 'Download folders.',
+            'created_at' => Carbon::now()->toDateTimeString(),
+            'updated_at' => Carbon::now()->toDateTimeString()
+        ]);
+
         $trashFoldersPermissionId = DB::table('permissions')->insertGetId([
             'name' => 'trash_folders',
             'display_name' => 'Trash folders',
@@ -275,6 +291,16 @@ class CreateRolesPermissionsTables extends Migration
 
         DB::table('permission_role')->insert([
             'permission_id' => $updateFoldersPermissionId,
+            'role_id' => $driveManagerRoleId
+        ]);
+
+        DB::table('permission_role')->insert([
+            'permission_id' => $moveFoldersPermissionId,
+            'role_id' => $driveManagerRoleId
+        ]);
+
+        DB::table('permission_role')->insert([
+            'permission_id' => $downloadFoldersPermissionId,
             'role_id' => $driveManagerRoleId
         ]);
 

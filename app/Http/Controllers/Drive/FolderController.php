@@ -41,17 +41,55 @@ class FolderController extends Controller
      */
     public function fetch(Request $request, Folder $folder = null)
     {
-        if ($request->user()->cannot('fetch_folders')) {
-            abort(403, 'Unauthorized.');
+        if ($folder) {
+            if ($request->user()->id !== $folder->owned_by_id &&
+                $request->user()->cannot('fetch_folders')
+            ) {
+                abort(403, 'You\'re not authorized to fetch folders you do not own.');
+            }
+
+            return $folder;
         }
 
-        if ($folder) {
-            return $folder;
+        $this->validate($request, ['owned_by_id' => 'nullable|integer|exists:users,id']);
+
+        $limit = $this->validatePaging($request);
+
+        if ($request->has('owned_by_id')) {
+            if ($request->user()->id !== (int) $request->input('owned_by_id')&&
+                $request->user()->cannot('fetch_folders')
+            ) {
+                abort(403, 'You\'re not authorized to fetch folders you do not own.');
+            }
+
+            return Folder::where('owned_by_id', $request->input('owned_by_id'))->paginate($limit);
+        }
+
+        if ($request->user()->cannot('fetch_folders')) {
+            abort(403, 'You\'re not authorized to fetch folders you do not own.');
+        }
+
+        return Folder::paginate($limit);
+    }
+
+    /**
+     * Return all child folders of a folder
+     *
+     * @param  \Illuminate\Http\Request $request
+     * @param  \App\Models\Drive\Folder $folder
+     * @return \Illuminate\Http\Response
+     */
+    public function fetchChildren(Request $request, Folder $folder)
+    {
+        if ($request->user()->id !== $folder->owned_by_id &&
+            $request->user()->cannot('fetch_folders')
+        ) {
+            abort(403, 'You\'re not authorized to fetch folders you do not own.');
         }
 
         $limit = $this->validatePaging($request);
 
-        return Folder::paginate($limit);
+        return $folder->folders()->paginate($limit);
     }
 
     /**
@@ -62,25 +100,32 @@ class FolderController extends Controller
      */
     public function store(Request $request)
     {
-        if ($request->user()->id !== $request->input('owned_by_id') &&
+        $this->validate($request, [
+            'name' => 'required|string|max:255|regex:/^(?!\.+)[\w,\s-\.]+[\w,\s-]$/',
+            'folder_id' => 'required|integer|exists:folders,id',
+            'owned_by_id' => 'required|integer|exists:users,id',
+        ]);
+
+        $parentFolder = Folder::find($request->input('folder_id'));
+
+        if (($request->user()->id !==  (int) $request->input('owned_by_id') ||
+            $request->user()->id !== $parentFolder->owned_by_id) &&
             $request->user()->cannot('create_folders')
         ) {
             abort(403, 'Unauthorized.');
         }
 
-        $this->validate($request, [
-            'name' => 'required|string|max:255',
-            'folder_id' => 'required|integer|exists:folders,id',
-            'owned_by_id' => 'required|integer|exists:users,id',
-        ]);
-
         $folder = new Folder;
         $folder->name = $request->input('name');
-        $folder->folder_id = $request->input('folder_id');
+        $folder->folder_id = $parentFolder->id;
         $folder->owned_by_id = $request->input('owned_by_id');
         $folder->created_by_id = $request->user()->id;
 
-        $folder->save();
+        try {
+            $folder->save();
+        } catch (\Illuminate\Database\QueryException $e) {
+            abort(409, 'A folder with the name "'.$folder->name.'" already exists.');
+        }
 
         return $folder;
     }
@@ -94,23 +139,80 @@ class FolderController extends Controller
      */
     public function update(Request $request, Folder $folder)
     {
+        $this->validate($request, ['name' => 'nullable|string|max:255']);
+
         if ($request->user()->id !== $folder->owned_by_id &&
             $request->user()->cannot('update_folders')
         ) {
-            abort(403, 'Unauthorized.');
+            abort(403, 'You\'re not authorized to update folders you don\'t own.');
         }
-
-        $this->validate($request, [
-            'name' => 'nullable|string|max:255',
-            'folder_id' => 'nullable|integer|exists:folders,id',
-            'owned_by_id' => 'nullable|integer|exists:users,id',
-        ]);
 
         $folder->fill($request->all())->save();
 
-        $folder->load('owned_by');
-
         return $folder;
+    }
+
+    /**
+     * Move a folder.
+     *
+     * @param  \Illuminate\Http\Request $request
+     * @param  \App\Models\Drive\Folder $folder
+     * @return \Illuminate\Http\Response
+     */
+    public function move(Request $request, Folder $folder)
+    {
+        $this->validate($request, ['folder_id' => 'required|integer|exists:folders,id']);
+
+        $newParentFolder = Folder::find($request->input('folder_id'));
+
+        if ($request->user()->id !== $folder->owned_by_id &&
+            $request->user()->cannot('move_folders')
+        ) {
+            abort(403, 'You\'re not authorized to move folders you don\'t own.');
+        }
+
+        if ($request->user()->id !== $newParentFolder->owned_by_id &&
+            $request->user()->cannot('move_folders')
+        ) {
+            abort(403, 'You\'re not authorized to move folders to folders you don\'t own.');
+        }
+
+        if ($folder->id === (int) $request->input('folder_id')) {
+            abort(409, 'You cannot move a folder into itself.');
+        }
+
+        if ($folder->folder_id === null) {
+            $msg = 'The folder you\'re requesting to move is a root folder and cannot be ';
+            $msg .= 'moved.';
+
+            abort(409, $msg);
+        }
+
+        $folder->folder_id = $newParentFolder->id;
+
+        $folder->moveTo($newParentFolder);
+
+        return response('', 204);
+    }
+
+    /**
+     * Download folder as a zip.
+     *
+     * @param  \Illuminate\Http\Request $request
+     * @param  \App\Models\Drive\Folder $folder
+     * @return \Illuminate\Http\Response
+     */
+    public function download(Request $request, Folder $folder)
+    {
+        if ($request->user()->id !== $folder->owned_by_id &&
+            $request->user()->cannot('download_folders')
+        ) {
+            abort(403, 'You\'re not authorized to download folders you don\'t own.');
+        }
+
+        $zipPath = $folder->packageZip();
+
+        return response()->download($zipPath, $folder->name.'.zip')->deleteFileAfterSend(true);
     }
 
     /**
@@ -122,8 +224,17 @@ class FolderController extends Controller
      */
     public function trash(Request $request, Folder $folder)
     {
-        if ($request->user()->cannot('trash_folders')) {
+        if ($request->user()->id !== $folder->owned_by_id &&
+            $request->user()->cannot('trash_folders')
+        ) {
             abort(403, 'Unauthorized.');
+        }
+
+        if ($trashedFolder->folder_id === null) {
+            $msg = 'The folder you\'re requesting to trash is a root folder and cannot be ';
+            $msg .= 'trashed.';
+
+            abort(409, $msg);
         }
 
         $folder->delete();
@@ -140,8 +251,17 @@ class FolderController extends Controller
      */
     public function delete(Request $request, Folder $trashedFolder)
     {
-        if ($request->user()->cannot('delete_folders')) {
-            abort(403, 'Unauthorized.');
+        if ($request->user()->id !== $folder->owned_by_id &&
+            $request->user()->cannot('delete_folders')
+        ) {
+            abort(403, 'Your\'re not authorized to delete folders you don\'t own.');
+        }
+
+        if ($trashedFolder->folder_id === null) {
+            $msg = 'The folder you\'re requesting to delete is a root folder and cannot be ';
+            $msg .= 'deleted.';
+
+            abort(409, $msg);
         }
 
         $trashedFolder->forceDelete();
@@ -158,8 +278,10 @@ class FolderController extends Controller
      */
     public function restore(Request $request, Folder $trashedFolder)
     {
-        if ($request->user()->cannot('restore_folders')) {
-            abort(403, 'Unauthorized.');
+        if ($request->user()->id !== $folder->owned_by_id &&
+            $request->user()->cannot('restore_folders')
+        ) {
+            abort(403, 'You\'re not authorized to restore folders you don\'t own.');
         }
 
         $trashedFolder->restore();
