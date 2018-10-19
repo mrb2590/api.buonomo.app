@@ -66,7 +66,7 @@ class UserController extends Controller
         $this->validate($request, [
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
+            'email' => 'required|email|max:255|unique:users',
             'password' => 'required|string|min:6',
             'verified' => 'required|boolean',
         ]);
@@ -113,7 +113,7 @@ class UserController extends Controller
         $this->validate($request, [
             'first_name' => 'nullable|string|max:255',
             'last_name' => 'nullable|string|max:255',
-            'email' => 'nullable|string|email|max:255|unique:users',
+            'email' => 'nullable|email|max:255|unique:users',
             'password' => 'nullable|string|min:6',
         ]);
 
@@ -129,10 +129,6 @@ class UserController extends Controller
 
         if ($request->has('email')) {
             $user->slug = str_slug(explode('@', $data['email'])[0], '-');
-
-            $user->folder->name = $user->slug;
-
-            $user->folder->save();
         }
 
         $user->fill($data)->save();

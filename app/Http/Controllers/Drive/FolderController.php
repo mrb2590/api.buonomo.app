@@ -103,13 +103,11 @@ class FolderController extends Controller
         $this->validate($request, [
             'name' => 'required|string|max:255|regex:/^(?!\.+)[\w,\s-\.]+[\w,\s-]$/',
             'folder_id' => 'required|integer|exists:folders,id',
-            'owned_by_id' => 'required|integer|exists:users,id',
         ]);
 
         $parentFolder = Folder::find($request->input('folder_id'));
 
-        if (($request->user()->id !==  (int) $request->input('owned_by_id') ||
-            $request->user()->id !== $parentFolder->owned_by_id) &&
+        if ($request->user()->id !== $parentFolder->owned_by_id &&
             $request->user()->cannot('create_folders')
         ) {
             abort(403, 'Unauthorized.');
@@ -118,7 +116,7 @@ class FolderController extends Controller
         $folder = new Folder;
         $folder->name = $request->input('name');
         $folder->folder_id = $parentFolder->id;
-        $folder->owned_by_id = $request->input('owned_by_id');
+        $folder->owned_by_id = $parentFolder->owned_by_id;
         $folder->created_by_id = $request->user()->id;
 
         try {
@@ -230,7 +228,7 @@ class FolderController extends Controller
             abort(403, 'Unauthorized.');
         }
 
-        if ($trashedFolder->folder_id === null) {
+        if ($folder->folder_id === null) {
             $msg = 'The folder you\'re requesting to trash is a root folder and cannot be ';
             $msg .= 'trashed.';
 
@@ -251,7 +249,7 @@ class FolderController extends Controller
      */
     public function delete(Request $request, Folder $trashedFolder)
     {
-        if ($request->user()->id !== $folder->owned_by_id &&
+        if ($request->user()->id !== $trashedFolder->owned_by_id &&
             $request->user()->cannot('delete_folders')
         ) {
             abort(403, 'Your\'re not authorized to delete folders you don\'t own.');
@@ -278,7 +276,7 @@ class FolderController extends Controller
      */
     public function restore(Request $request, Folder $trashedFolder)
     {
-        if ($request->user()->id !== $folder->owned_by_id &&
+        if ($request->user()->id !== $trashedFolder->owned_by_id &&
             $request->user()->cannot('restore_folders')
         ) {
             abort(403, 'You\'re not authorized to restore folders you don\'t own.');
