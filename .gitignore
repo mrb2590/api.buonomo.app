@@ -12,9 +12,5 @@ npm-debug.log
 yarn-error.log
 .env
 .phpunit.result.cache
-sftp-config.json
-*.sublime-project
-*.sublime-workspace
-*.vscode
 *.code-workspace
-
+.vscode/sftp.json
