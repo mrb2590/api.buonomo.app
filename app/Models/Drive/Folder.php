@@ -58,7 +58,7 @@ class Folder extends Model
     {
         $path = '';
 
-        $this->traverseAllParentFolders(function($folder) use (&$path) {
+        $this->recursiveForEachParent(function($folder) use (&$path) {
             $path = $folder->name.'/'.$path;
         });
 
@@ -106,7 +106,10 @@ class Folder extends Model
      */
     public function moveTo(Folder $folder)
     {
-        $this->traverseAllChildFolders(function($childFolder) use ($folder) {
+        $this->owned_by_id = $folder->owned_by_id;
+        $this->save();
+
+        $this->recursiveForEachChild(function($childFolder) use ($folder) {
             $childFolder->owned_by_id = $folder->owned_by_id;
             $childFolder->save();
         });
@@ -127,7 +130,9 @@ class Folder extends Model
             abort(500, 'Failed to open zip file.');
         }
 
-        $this->traverseAllChildFolders(function($folder) use (&$zip) {
+        $zip->addEmptyDir(substr($this->path, 1, strlen($this->path) - 1));
+
+        $this->recursiveForEachChild(function($folder) use (&$zip) {
             $zip->addEmptyDir(substr($folder->path, 1, strlen($folder->path) - 1));
         });
 
@@ -143,14 +148,14 @@ class Folder extends Model
      *
      * @param  \Closure $callback
      */
-    private function traverseAllParentFolders(\Closure $callback)
+    private function recursiveForEachParent(\Closure $callback)
     {
         $callback($this);
 
         if ($this->folder_id !== null) {
             $folder = Folder::find($this->folder_id);
 
-            $folder->traverseAllParentFolders($callback);
+            $folder->recursiveForEachParent($callback);
         }
     }
 
@@ -159,12 +164,12 @@ class Folder extends Model
      *
      * @param  \Closure $callback
      */
-    private function traverseAllChildFolders(\Closure $callback)
+    private function recursiveForEachChild(\Closure $callback)
     {
-        $callback($this);
-
         foreach ($this->folders as $folder) {
-            $folder->traverseAllChildFolders($callback);
+            $callback($this);
+
+            $folder->recursiveForEachChild($callback);
         }
     }
 }
