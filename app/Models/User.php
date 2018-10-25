@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Drive\Folder;
+use App\Models\Drive\Server;
 use App\Traits\HasRoles;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -26,7 +27,11 @@ class User extends Authenticatable implements MustVerifyEmail
      *
      * @var array
      */
-    protected $casts = ['folder_id' => 'integer'];
+    protected $casts = [
+        'folder_id' => 'integer',
+        'allocated_drive_bytes' => 'integer',
+        'used_drive_bytes' => 'integer',
+    ];
 
     /**
      * The attributes that are mass assignable.
@@ -45,6 +50,36 @@ class User extends Authenticatable implements MustVerifyEmail
     protected $hidden = [
         'password', 'remember_token',
     ];
+
+    /**
+     * The accessors to append to the model's array form.
+     *
+     * @var array
+     */
+    protected $appends = [
+        'formatted_allocated_drive_bytes',
+        'formatted_used_drive_bytes',
+    ];
+
+    /**
+     * Get the formatted allocated drive bytes.
+     *
+     * @return string   
+     */
+    protected function getFormattedAllocatedDriveBytesAttribute()
+    {
+        return Server::formatBytes($this->allocated_drive_bytes);
+    }
+
+    /**
+     * Get the formatted used drive bytes.
+     *
+     * @return string   
+     */
+    protected function getFormattedUsedDriveBytesAttribute()
+    {
+        return Server::formatBytes($this->used_drive_bytes);
+    }
 
     /**
      * Get only public user information.
@@ -79,6 +114,7 @@ class User extends Authenticatable implements MustVerifyEmail
         $folder->name = $this->slug;
         $folder->owned_by_id = $this->id;
         $folder->created_by_id = $this->id;
+        $folder->updated_by_id = $this->id;
 
         $folder->save();
 

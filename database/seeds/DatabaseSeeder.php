@@ -27,6 +27,7 @@ class DatabaseSeeder extends Seeder
         $user->slug = str_slug(explode('@', $email)[0], '-');
         $user->password = bcrypt('apples');
         $user->email_verified_at = Carbon::now();
+        $user->allocated_drive_bytes = 1000000;
 
         $user->save();
 

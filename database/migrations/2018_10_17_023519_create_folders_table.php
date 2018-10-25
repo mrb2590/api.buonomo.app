@@ -1,8 +1,8 @@
 <?php
 
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
 class CreateFoldersTable extends Migration
 {
@@ -17,8 +17,10 @@ class CreateFoldersTable extends Migration
             $table->increments('id');
             $table->string('name');
             $table->integer('folder_id')->unsigned()->nullable();
+            $table->bigInteger('size')->unsigned()->default(0);
             $table->integer('owned_by_id')->unsigned();
             $table->integer('created_by_id')->unsigned();
+            $table->integer('updated_by_id')->unsigned();
             $table->softDeletes();
             $table->timestamps();
 
@@ -27,6 +29,8 @@ class CreateFoldersTable extends Migration
             $table->foreign('owned_by_id')->references('id')->on('users')
                 ->onDelete('cascade')->onUpdate('cascade');
             $table->foreign('created_by_id')->references('id')->on('users')
+                ->onDelete('cascade')->onUpdate('cascade');
+            $table->foreign('updated_by_id')->references('id')->on('users')
                 ->onDelete('cascade')->onUpdate('cascade');
             $table->unique(['name', 'folder_id', 'owned_by_id']);
         });

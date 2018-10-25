@@ -43,7 +43,7 @@ class UserController extends Controller
     public function fetch(Request $request, User $user = null)
     {
         if ($request->user()->cannot('fetch_users')) {
-            abort(403, 'Unauthorized.');
+            abort(403, 'You are not authorized to fetch users.');
         }
 
         if ($user) {
@@ -69,10 +69,11 @@ class UserController extends Controller
             'email' => 'required|email|max:255|unique:users',
             'password' => 'required|string|min:6',
             'verified' => 'required|boolean',
+            'allocated_drive_bytes' => 'nullable|integer|min:0',
         ]);
 
         if ($request->user()->cannot('create_users')) {
-            abort(403, 'Unauthorized.');
+            abort(403, 'You are not authorized to create users.');
         }
 
         $user = new User;
@@ -83,20 +84,12 @@ class UserController extends Controller
         $user->slug = str_slug(explode('@', $request->input('email'))[0], '-');
         $user->password = bcrypt($request->input('password'));
         $user->email_verified_at = $request->input('verified') ? Carbon::now() : null;
+        $user->allocated_drive_bytes = $request->input('allocated_drive_bytes');
 
         $user->save();
 
         // Create user's root folder
-        $folder = new Folder;
-        $folder->name = $user->slug;
-        $folder->owned_by_id = $user->id;
-        $folder->created_by_id = $user->id;
-
-        $folder->save();
-
-        $user->folder_id = $folder->id;
-
-        $user->save();
+        $user->createRootFolder();
 
         return $user;
     }
@@ -115,10 +108,22 @@ class UserController extends Controller
             'last_name' => 'nullable|string|max:255',
             'email' => 'nullable|email|max:255|unique:users',
             'password' => 'nullable|string|min:6',
+            'verified' => 'required|boolean',
+            'allocated_drive_bytes' => 'nullable|integer|min:0',
         ]);
 
         if ($request->user()->isNot($user) && $request->user()->cannot('update_users')) {
-            abort(403, 'Unauthorized.');
+            abort(403, 'You are not authorized to update other users.');
+        }
+
+        // Make sure current user set other's 
+        if ($request->has('verified') && $request->user()->cannot('verified')) {
+            abort(403, 'You are not authorized to update your own verification.');
+        }
+
+        // Make sure current user can update their own drive storage
+        if ($request->has('allocated_drive_bytes') && $request->user()->cannot('update_users')) {
+            abort(403, 'You are not authorized to update your drive storage.');
         }
 
         $data = $request->all();
@@ -129,6 +134,14 @@ class UserController extends Controller
 
         if ($request->has('email')) {
             $user->slug = str_slug(explode('@', $data['email'])[0], '-');
+        }
+
+        if ($request->has('verified')) {
+            $user->email_verified_at = $request->input('verified') ? Carbon::now() : null;
+        }
+
+        if ($request->has('allocated_drive_bytes')) {
+            $user->allocated_drive_bytes = $data['allocated_drive_bytes'];
         }
 
         $user->fill($data)->save();
@@ -146,7 +159,7 @@ class UserController extends Controller
     public function trash(Request $request, User $user)
     {
         if ($request->user()->cannot('trash_users')) {
-            abort(403, 'Unauthorized.');
+            abort(403, 'You are not authorized to trash users.');
         }
 
         $user->delete();
@@ -164,7 +177,7 @@ class UserController extends Controller
     public function delete(Request $request, User $trashedUser)
     {
         if ($request->user()->cannot('delete_users')) {
-            abort(403, 'Unauthorized.');
+            abort(403, 'You are not authorized to delete users.');
         }
 
         $trashedUser->forceDelete();
@@ -182,7 +195,7 @@ class UserController extends Controller
     public function restore(Request $request, User $trashedUser)
     {
         if ($request->user()->cannot('restore_users')) {
-            abort(403, 'Unauthorized.');
+            abort(403, 'You are not authorized to restore users.');
         }
 
         $trashedUser->restore();

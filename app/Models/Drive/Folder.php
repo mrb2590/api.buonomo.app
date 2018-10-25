@@ -2,6 +2,7 @@
 
 namespace App\Models\Drive;
 
+use App\Models\Drive\Server;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -26,6 +27,7 @@ class Folder extends Model
         'folder_id' => 'integer',
         'created_by_id' => 'integer',
         'owned_by_id' => 'integer',
+        'size' => 'integer'
     ];
 
     /**
@@ -40,14 +42,14 @@ class Folder extends Model
      *
      * @var array
      */
-    protected $appends = ['path'];
+    protected $appends = ['path', 'formatted_size'];
 
     /**
      * The relationships to always load.
      *
      * @var array
      */
-    protected $with = ['owned_by', 'created_by'];
+    // protected $with = ['owned_by', 'created_by', 'updated_by'];
 
     /**
      * Get the folder path.
@@ -65,6 +67,16 @@ class Folder extends Model
         $path = '/'.$path;
 
         return $path;
+    }
+
+    /**
+     * Get the formatted folder size.
+     *
+     * @return string   
+     */
+    protected function getFormattedSizeAttribute()
+    {
+        return Server::formatBytes($this->size);
     }
 
     /**
@@ -88,7 +100,8 @@ class Folder extends Model
      */
     public function owned_by()
     {
-        return $this->belongsTo(User::class, 'owned_by_id')->publicInfo();
+        // return $this->belongsTo(User::class, 'owned_by_id')->publicInfo();
+        return $this->belongsTo(User::class, 'owned_by_id');
     }
 
     /**
@@ -96,7 +109,17 @@ class Folder extends Model
      */
     public function created_by()
     {
-        return $this->belongsTo(User::class, 'created_by_id')->publicInfo();
+        // return $this->belongsTo(User::class, 'created_by_id')->publicInfo();
+        return $this->belongsTo(User::class, 'created_by_id');
+    }
+
+    /**
+     * Get the user who last updated the folder.
+     */
+    public function updated_by()
+    {
+        // return $this->belongsTo(User::class, 'updated_by_id')->publicInfo();
+        return $this->belongsTo(User::class, 'updated_by_id');
     }
 
     /**
@@ -106,13 +129,40 @@ class Folder extends Model
      */
     public function moveTo(Folder $folder)
     {
-        $this->owned_by_id = $folder->owned_by_id;
+        // Update current parent folder size
+        $this->folder->size -= $this->size;
+        $this->folder->save();
+
+        // If new owner, update the owner on this and all children
+        if ($this->owned_by_id !== $folder->owned_by_id) {
+            // Update the original owner's drive bytes
+            $this->owned_by->used_drive_bytes -= $this->size;
+            $this->owned_by->save();
+            
+            // Update this folder's owner
+            $this->owned_by_id = $folder->owned_by_id;
+            $this->save();
+
+            // Update this folder's children's owner
+            $this->recursiveForEachChild(function($childFolder) use ($folder) {
+                $childFolder->owned_by_id = $folder->owned_by_id;
+                $childFolder->save();
+            });
+
+            // Update the new owner's used drive bytes
+            $this->load('owned_by');
+            $this->owned_by->used_drive_bytes += $this->size;
+            $this->owned_by->save();
+        }
+
+        // Move the folder
+        $this->folder_id = $folder->id;
         $this->save();
 
-        $this->recursiveForEachChild(function($childFolder) use ($folder) {
-            $childFolder->owned_by_id = $folder->owned_by_id;
-            $childFolder->save();
-        });
+        // Update the new parent folder size2
+        $this->load('folder');
+        $this->folder->size += $this->size;
+        $this->folder->save();
     }
 
     /**
@@ -167,7 +217,7 @@ class Folder extends Model
     private function recursiveForEachChild(\Closure $callback)
     {
         foreach ($this->folders as $folder) {
-            $callback($this);
+            $callback($folder);
 
             $folder->recursiveForEachChild($callback);
         }

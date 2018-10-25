@@ -110,7 +110,7 @@ class FolderController extends Controller
         if ($request->user()->id !== $parentFolder->owned_by_id &&
             $request->user()->cannot('create_folders')
         ) {
-            abort(403, 'Unauthorized.');
+            abort(403, 'You are not authorized to create folders in other user\'s folders.');
         }
 
         $folder = new Folder;
@@ -118,6 +118,7 @@ class FolderController extends Controller
         $folder->folder_id = $parentFolder->id;
         $folder->owned_by_id = $parentFolder->owned_by_id;
         $folder->created_by_id = $request->user()->id;
+        $folder->updated_by_id = $request->user()->id;
 
         try {
             $folder->save();
@@ -146,6 +147,7 @@ class FolderController extends Controller
         }
 
         $folder->fill($request->all())->save();
+        $folder->updated_by_id = $request->user()->id;
 
         return $folder;
     }
@@ -186,7 +188,13 @@ class FolderController extends Controller
             abort(409, $msg);
         }
 
-        $folder->folder_id = $newParentFolder->id;
+        if ($newParentFolder->owned_by_id !== $folder->owned_by_id) {
+            $newUserDriveBytes = $newParentFolder->owned_by->used_drive_bytes + $folder->size;
+
+            if ($newUserDriveBytes > $newParentFolder->owned_by->allocated_drive_bytes) {
+                abort(403, 'The new owner does not have enough drive storage.');
+            }
+        }
 
         $folder->moveTo($newParentFolder);
 
@@ -225,7 +233,7 @@ class FolderController extends Controller
         if ($request->user()->id !== $folder->owned_by_id &&
             $request->user()->cannot('trash_folders')
         ) {
-            abort(403, 'Unauthorized.');
+            abort(403, 'You are not authorized to trash other user\'s folders.');
         }
 
         if ($folder->folder_id === null) {
@@ -261,6 +269,10 @@ class FolderController extends Controller
 
             abort(409, $msg);
         }
+
+        // Update folder owner's used drive bytes
+        $trashedFolder->owned_by->used_drive_bytes -= $folder->size;
+        $trashedFolder->owned_by->save();
 
         $trashedFolder->forceDelete();
 
