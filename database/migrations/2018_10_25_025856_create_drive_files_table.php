@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateFoldersTable extends Migration
+class CreateDriveFilesTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,33 +13,31 @@ class CreateFoldersTable extends Migration
      */
     public function up()
     {
-        Schema::create('folders', function (Blueprint $table) {
+        Schema::create('drive_files', function (Blueprint $table) {
             $table->increments('id');
             $table->string('name');
+            $table->string('basename');
+            $table->string('path')->unique();
+            $table->string('filename');
+            $table->string('extension');
+            $table->string('mime_type');
+            $table->bigInteger('size')->unsigned();
             $table->integer('folder_id')->unsigned()->nullable();
-            $table->bigInteger('size')->unsigned()->default(0);
             $table->integer('owned_by_id')->unsigned();
             $table->integer('created_by_id')->unsigned();
             $table->integer('updated_by_id')->unsigned();
             $table->softDeletes();
             $table->timestamps();
 
-            $table->foreign('folder_id')->references('id')->on('folders')
+            $table->foreign('folder_id')->references('id')->on('drive_folders')
                 ->onDelete('cascade')->onUpdate('cascade');
             $table->foreign('owned_by_id')->references('id')->on('users')
                 ->onDelete('cascade')->onUpdate('cascade');
             $table->foreign('created_by_id')->references('id')->on('users')
-                ->onDelete('cascade')->onUpdate('cascade');
+                ->onDelete('no action')->onUpdate('cascade');
             $table->foreign('updated_by_id')->references('id')->on('users')
-                ->onDelete('cascade')->onUpdate('cascade');
-            $table->unique(['name', 'folder_id', 'owned_by_id']);
-        });
-
-        Schema::table('users', function (Blueprint $table) {
-            $table->integer('folder_id')->unsigned()->nullable()->after('password');
-
-            $table->foreign('folder_id')->references('id')->on('folders')
-                ->onDelete('set null')->onUpdate('cascade');
+                ->onDelete('no action')->onUpdate('cascade');
+            $table->unique(['name', 'folder_id']);
         });
     }
 
@@ -50,12 +48,6 @@ class CreateFoldersTable extends Migration
      */
     public function down()
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropForeign('users_folder_id_foreign');
-
-            $table->dropColumn('folder_id');
-        });
-
-        Schema::dropIfExists('folders');
+        Schema::dropIfExists('files');
     }
 }

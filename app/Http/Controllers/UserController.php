@@ -140,10 +140,6 @@ class UserController extends Controller
             $user->email_verified_at = $request->input('verified') ? Carbon::now() : null;
         }
 
-        if ($request->has('allocated_drive_bytes')) {
-            $user->allocated_drive_bytes = $data['allocated_drive_bytes'];
-        }
-
         $user->fill($data)->save();
 
         return $user;

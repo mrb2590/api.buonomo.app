@@ -12,6 +12,13 @@ class Folder extends Model
     use SoftDeletes;
 
     /**
+     * The table associated with the model
+     *
+     * @var string
+     */
+    protected $table = 'drive_folders';
+
+    /**
      * The attributes that should be mutated to dates.
      *
      * @var array
@@ -25,9 +32,10 @@ class Folder extends Model
      */
     protected $casts = [
         'folder_id' => 'integer',
+        'size' => 'integer',
         'created_by_id' => 'integer',
         'owned_by_id' => 'integer',
-        'size' => 'integer'
+        'updated_by_id' => 'integer',
     ];
 
     /**
@@ -133,6 +141,12 @@ class Folder extends Model
         $this->folder->size -= $this->size;
         $this->folder->save();
 
+        $that = $this;
+
+        $this->recursiveForEachParent(function($folder) use ($that) {
+            $folder->size -= $that->size;
+        });
+
         // If new owner, update the owner on this and all children
         if ($this->owned_by_id !== $folder->owned_by_id) {
             // Update the original owner's drive bytes
@@ -159,10 +173,16 @@ class Folder extends Model
         $this->folder_id = $folder->id;
         $this->save();
 
-        // Update the new parent folder size2
+        // Update all new parent folder sizes
         $this->load('folder');
         $this->folder->size += $this->size;
         $this->folder->save();
+
+        $that = $this;
+
+        $this->recursiveForEachParent(function($folder) use ($that) {
+            $folder->size += $that->size;
+        });
     }
 
     /**
@@ -198,7 +218,7 @@ class Folder extends Model
      *
      * @param  \Closure $callback
      */
-    private function recursiveForEachParent(\Closure $callback)
+    public function recursiveForEachParent(\Closure $callback)
     {
         $callback($this);
 
@@ -214,7 +234,7 @@ class Folder extends Model
      *
      * @param  \Closure $callback
      */
-    private function recursiveForEachChild(\Closure $callback)
+    public function recursiveForEachChild(\Closure $callback)
     {
         foreach ($this->folders as $folder) {
             $callback($folder);
