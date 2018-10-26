@@ -16,10 +16,10 @@ class CreateDriveFilesTable extends Migration
         Schema::create('drive_files', function (Blueprint $table) {
             $table->increments('id');
             $table->string('name');
-            $table->string('basename');
-            $table->string('path')->unique();
             $table->string('filename');
             $table->string('extension');
+            $table->string('storage_basename');
+            $table->string('storage_path');
             $table->string('mime_type');
             $table->bigInteger('size')->unsigned();
             $table->integer('folder_id')->unsigned()->nullable();
@@ -48,6 +48,6 @@ class CreateDriveFilesTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('files');
+        Schema::dropIfExists('drive_files');
     }
 }

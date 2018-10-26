@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\Drive\File;
 use App\Models\Drive\Folder;
 use App\Models\User;
 use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvider;
@@ -33,6 +34,10 @@ class RouteServiceProvider extends ServiceProvider
 
         Route::bind('trashedFolder', function ($value) {
             return Folder::onlyTrashed()->find($value);
+        });
+
+        Route::bind('trashedFile', function ($value) {
+            return File::onlyTrashed()->find($value);
         });
     }
 

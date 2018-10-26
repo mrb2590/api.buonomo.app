@@ -66,15 +66,15 @@ class File extends Model
      */
     protected function getPathAttribute()
     {
-        $path = '';
+        $path = $this->folder->name.'/'.$this->name.'.'.$this->extension;
 
-        $this->recursiveForEachParent(function($folder) use (&$path) {
+        $this->folder->recursiveForEachParent(function($folder) use (&$path) {
             $path = $folder->name.'/'.$path;
         });
 
-        $path = '/'.$path;
+        unset($this->folder);
 
-        return $path;
+        return '/'.$path;
     }
 
     /**
@@ -135,17 +135,17 @@ class File extends Model
 
         $that = $this;
 
-        $this->recursiveForEachParent(function($folder) use ($that) {
+        $this->folder->recursiveForEachParent(function($folder) use ($that) {
             $folder->size -= $that->size;
+            $folder-save();
         });
 
         // If new owner, update the owner
-
         if ($this->owned_by_id !== $folder->owned_by_id) {
             // Update the original owner's drive bytes
             $this->owned_by->used_drive_bytes -= $this->size;
             $this->owned_by->save();
-            
+
             // Update this file's owner
             $this->owned_by_id = $folder->owned_by_id;
             $this->save();
@@ -156,7 +156,7 @@ class File extends Model
             $this->owned_by->save();
         }
 
-        // Move the folder
+        // Move the file
         $this->folder_id = $folder->id;
         $this->save();
 
@@ -167,66 +167,9 @@ class File extends Model
 
         $that = $this;
 
-        $this->recursiveForEachParent(function($folder) use ($that) {
+        $this->folder->recursiveForEachParent(function($folder) use ($that) {
             $folder->size += $that->size;
+            $folder-save();
         });
-    }
-
-    /**
-     * Create a zip of the folder and its contents.
-     *
-     * @return  string  The absolute path of the zip
-     */
-    public function packageZip()
-    {
-        $zip = new \ZipArchive;
-        $filename = 'temp'.time().'.zip';
-        $zipPath = config('filesystems.disks.tmp.root').'/'.$filename;
-
-        if ($zip->open($zipPath, \ZipArchive::CREATE) !== true) {
-            abort(500, 'Failed to open zip file.');
-        }
-
-        $zip->addEmptyDir(substr($this->path, 1, strlen($this->path) - 1));
-
-        $this->recursiveForEachChild(function($folder) use (&$zip) {
-            $zip->addEmptyDir(substr($folder->path, 1, strlen($folder->path) - 1));
-        });
-
-        if ($zip->close() !== true) {
-            abort(500, 'Failed to save zip file.');
-        }
-
-        return $zipPath;
-    }
-
-    /**
-     * Recursively traverse all parent folders.
-     *
-     * @param  \Closure $callback
-     */
-    private function recursiveForEachParent(\Closure $callback)
-    {
-        $callback($this);
-
-        if ($this->folder_id !== null) {
-            $folder = Folder::find($this->folder_id);
-
-            $folder->recursiveForEachParent($callback);
-        }
-    }
-
-    /**
-     * Recursively traverse all child folders.
-     *
-     * @param  \Closure $callback
-     */
-    private function recursiveForEachChild(\Closure $callback)
-    {
-        foreach ($this->folders as $folder) {
-            $callback($folder);
-
-            $folder->recursiveForEachChild($callback);
-        }
     }
 }

@@ -63,9 +63,13 @@ Route::middleware(['auth:api', 'verified'])->prefix('v1')->group(function() {
     Route::get('/drive/folders/{folder?}', 'Drive\FolderController@fetch')
         ->name('drive.folders.fetch');
 
-    // Fetch all child folders of a folder
+    // Fetch all folders in a folder
     Route::get('/drive/folders/{folder}/folders', 'Drive\FolderController@fetchChildren')
         ->name('drive.folders.children.fetch');
+
+    // Fetch all files in a folder
+    // Route::get('/drive/folders/{file}/files', 'Drive\FolderController@fetchFiles')
+    //     ->name('drive.folders.files.fetch');
 
     // Create a folder
     Route::post('/drive/folders', 'Drive\FolderController@store')->name('drive.folders.create');
@@ -93,5 +97,38 @@ Route::middleware(['auth:api', 'verified'])->prefix('v1')->group(function() {
     // Restore a trashed folder
     Route::post('/drive/folders/{trashedFolder}/restore', 'Drive\FolderController@restore')
         ->name('drive.folders.restore');
+
+    /* Drive Files */
+
+    // Fetch all or a single file
+    Route::get('/drive/files/{file?}', 'Drive\FileController@fetch')
+        ->name('drive.files.fetch');
+
+    // Create a file
+    Route::post('/drive/files', 'Drive\FileController@store')->name('drive.files.create');
+
+    // Update a file
+    Route::patch('/drive/files/{file}', 'Drive\FileController@update')
+        ->name('drive.files.update');
+
+    // Move a file
+    Route::patch('/drive/files/{file}/move', 'Drive\FileController@move')
+        ->name('drive.files.move');
+
+    // Download a file
+    Route::get('/drive/files/{file}/download', 'Drive\FileController@download')
+        ->name('drive.files.download');
+
+    // Trash a file
+    Route::delete('/drive/files/{file}/trash', 'Drive\FileController@trash')
+        ->name('drive.files.trash');
+
+    // Delete a trashed file
+    Route::delete('/drive/files/{trashedFile}', 'Drive\FileController@delete')
+        ->name('drive.files.delete');
+
+    // Restore a trashed file
+    Route::post('/drive/files/{trashedFile}/restore', 'Drive\FileController@restore')
+        ->name('drive.files.restore');
 
 });

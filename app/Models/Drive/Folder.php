@@ -66,15 +66,13 @@ class Folder extends Model
      */
     protected function getPathAttribute()
     {
-        $path = '';
+        $path = $this->name;
 
         $this->recursiveForEachParent(function($folder) use (&$path) {
             $path = $folder->name.'/'.$path;
         });
 
-        $path = '/'.$path;
-
-        return $path;
+        return '/'.$path;
     }
 
     /**
@@ -137,7 +135,7 @@ class Folder extends Model
      */
     public function moveTo(Folder $folder)
     {
-        // Update current parent folder size
+        // Update current parents' folder sizes
         $this->folder->size -= $this->size;
         $this->folder->save();
 
@@ -145,6 +143,7 @@ class Folder extends Model
 
         $this->recursiveForEachParent(function($folder) use ($that) {
             $folder->size -= $that->size;
+            $folder->save();
         });
 
         // If new owner, update the owner on this and all children
@@ -152,7 +151,7 @@ class Folder extends Model
             // Update the original owner's drive bytes
             $this->owned_by->used_drive_bytes -= $this->size;
             $this->owned_by->save();
-            
+
             // Update this folder's owner
             $this->owned_by_id = $folder->owned_by_id;
             $this->save();
@@ -173,7 +172,7 @@ class Folder extends Model
         $this->folder_id = $folder->id;
         $this->save();
 
-        // Update all new parent folder sizes
+        // Update all new parents' folder sizes
         $this->load('folder');
         $this->folder->size += $this->size;
         $this->folder->save();
@@ -182,6 +181,7 @@ class Folder extends Model
 
         $this->recursiveForEachParent(function($folder) use ($that) {
             $folder->size += $that->size;
+            $folder->save();
         });
     }
 
@@ -220,10 +220,11 @@ class Folder extends Model
      */
     public function recursiveForEachParent(\Closure $callback)
     {
-        $callback($this);
-
         if ($this->folder_id !== null) {
+            // Do this so the relationship is not appended to the original object
             $folder = Folder::find($this->folder_id);
+
+            $callback($folder);
 
             $folder->recursiveForEachParent($callback);
         }

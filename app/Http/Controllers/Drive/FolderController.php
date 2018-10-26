@@ -45,7 +45,7 @@ class FolderController extends Controller
             if ($request->user()->id !== $folder->owned_by_id &&
                 $request->user()->cannot('fetch_folders')
             ) {
-                abort(403, 'You\'re not authorized to fetch folders you do not own.');
+                abort(403, 'You\'re not authorized to fetch folders you don\'t own.');
             }
 
             return $folder;
@@ -59,14 +59,14 @@ class FolderController extends Controller
             if ($request->user()->id !== (int) $request->input('owned_by_id')&&
                 $request->user()->cannot('fetch_folders')
             ) {
-                abort(403, 'You\'re not authorized to fetch folders you do not own.');
+                abort(403, 'You\'re not authorized to fetch folders you don\'t own.');
             }
 
             return Folder::where('owned_by_id', $request->input('owned_by_id'))->paginate($limit);
         }
 
         if ($request->user()->cannot('fetch_folders')) {
-            abort(403, 'You\'re not authorized to fetch folders you do not own.');
+            abort(403, 'You\'re not authorized to fetch folders you don\'t own.');
         }
 
         return Folder::paginate($limit);
@@ -84,7 +84,7 @@ class FolderController extends Controller
         if ($request->user()->id !== $folder->owned_by_id &&
             $request->user()->cannot('fetch_folders')
         ) {
-            abort(403, 'You\'re not authorized to fetch folders you do not own.');
+            abort(403, 'You\'re not authorized to fetch folders you don\'t own.');
         }
 
         $limit = $this->validatePaging($request);
@@ -102,7 +102,7 @@ class FolderController extends Controller
     {
         $this->validate($request, [
             'name' => 'required|string|max:255|regex:/^(?!\.+)[\w,\s-\.]+[\w,\s-]$/',
-            'folder_id' => 'required|integer|exists:folders,id',
+            'folder_id' => 'required|integer|exists:drive_folders,id',
         ]);
 
         $parentFolder = Folder::find($request->input('folder_id'));
@@ -110,7 +110,7 @@ class FolderController extends Controller
         if ($request->user()->id !== $parentFolder->owned_by_id &&
             $request->user()->cannot('create_folders')
         ) {
-            abort(403, 'You are not authorized to create folders in other user\'s folders.');
+            abort(403, 'You are not authorized to create folders in other users\' folders.');
         }
 
         $folder = new Folder;
@@ -161,7 +161,7 @@ class FolderController extends Controller
      */
     public function move(Request $request, Folder $folder)
     {
-        $this->validate($request, ['folder_id' => 'required|integer|exists:folders,id']);
+        $this->validate($request, ['folder_id' => 'required|integer|exists:drive_folders,id']);
 
         $newParentFolder = Folder::find($request->input('folder_id'));
 
@@ -182,7 +182,7 @@ class FolderController extends Controller
         }
 
         if ($folder->folder_id === null) {
-            $msg = 'The folder you\'re requesting to move is a root folder and cannot be ';
+            $msg = 'The folder you\'re requesting to move is a root folder and can\'t be ';
             $msg .= 'moved.';
 
             abort(409, $msg);
@@ -237,7 +237,7 @@ class FolderController extends Controller
         }
 
         if ($folder->folder_id === null) {
-            $msg = 'The folder you\'re requesting to trash is a root folder and cannot be ';
+            $msg = 'The folder you\'re requesting to trash is a root folder and can\'t be ';
             $msg .= 'trashed.';
 
             abort(409, $msg);
@@ -264,14 +264,14 @@ class FolderController extends Controller
         }
 
         if ($trashedFolder->folder_id === null) {
-            $msg = 'The folder you\'re requesting to delete is a root folder and cannot be ';
+            $msg = 'The folder you\'re requesting to delete is a root folder and can\'t be ';
             $msg .= 'deleted.';
 
             abort(409, $msg);
         }
 
         // Update folder owner's used drive bytes
-        $trashedFolder->owned_by->used_drive_bytes -= $folder->size;
+        $trashedFolder->owned_by->used_drive_bytes -= $trashedFolder->size;
         $trashedFolder->owned_by->save();
 
         $trashedFolder->forceDelete();

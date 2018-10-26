@@ -226,6 +226,71 @@ class CreateRolesPermissionsTables extends Migration
             'updated_at' => Carbon::now()->toDateTimeString()
         ]);
 
+        // File permissions
+        $uploadFilesPermissionId = DB::table('permissions')->insertGetId([
+            'name' => 'upload_files',
+            'display_name' => 'Create new files',
+            'description' => 'Create new files.',
+            'created_at' => Carbon::now()->toDateTimeString(),
+            'updated_at' => Carbon::now()->toDateTimeString()
+        ]);
+
+        $fetchFilesPermissionId = DB::table('permissions')->insertGetId([
+            'name' => 'fetch_files',
+            'display_name' => 'Fetch files',
+            'description' => 'Fetch files.',
+            'created_at' => Carbon::now()->toDateTimeString(),
+            'updated_at' => Carbon::now()->toDateTimeString()
+        ]);
+
+        $updateFilesPermissionId = DB::table('permissions')->insertGetId([
+            'name' => 'update_files',
+            'display_name' => 'Update files',
+            'description' => 'Update files.',
+            'created_at' => Carbon::now()->toDateTimeString(),
+            'updated_at' => Carbon::now()->toDateTimeString()
+        ]);
+
+        $moveFilesPermissionId = DB::table('permissions')->insertGetId([
+            'name' => 'move_files',
+            'display_name' => 'Move files',
+            'description' => 'Move files.',
+            'created_at' => Carbon::now()->toDateTimeString(),
+            'updated_at' => Carbon::now()->toDateTimeString()
+        ]);
+
+        $downloadFilesPermissionId = DB::table('permissions')->insertGetId([
+            'name' => 'download_files',
+            'display_name' => 'Download files',
+            'description' => 'Download files.',
+            'created_at' => Carbon::now()->toDateTimeString(),
+            'updated_at' => Carbon::now()->toDateTimeString()
+        ]);
+
+        $trashFilesPermissionId = DB::table('permissions')->insertGetId([
+            'name' => 'trash_files',
+            'display_name' => 'Trash files',
+            'description' => 'Trash files.',
+            'created_at' => Carbon::now()->toDateTimeString(),
+            'updated_at' => Carbon::now()->toDateTimeString()
+        ]);
+
+        $deleteFilesPermissionId = DB::table('permissions')->insertGetId([
+            'name' => 'delete_files',
+            'display_name' => 'Delete files',
+            'description' => 'Delete files.',
+            'created_at' => Carbon::now()->toDateTimeString(),
+            'updated_at' => Carbon::now()->toDateTimeString()
+        ]);
+
+        $restoreFilesPermissionId = DB::table('permissions')->insertGetId([
+            'name' => 'restore_files',
+            'display_name' => 'Restore files',
+            'description' => 'Restore files.',
+            'created_at' => Carbon::now()->toDateTimeString(),
+            'updated_at' => Carbon::now()->toDateTimeString()
+        ]);
+
         // API Manager's role permissions
         DB::table('permission_role')->insert([
             'permission_id' => $manageAPIClientsPermissionId,
@@ -316,6 +381,46 @@ class CreateRolesPermissionsTables extends Migration
 
         DB::table('permission_role')->insert([
             'permission_id' => $restoreFoldersPermissionId,
+            'role_id' => $driveManagerRoleId
+        ]);
+
+        DB::table('permission_role')->insert([
+            'permission_id' => $uploadFilesPermissionId,
+            'role_id' => $driveManagerRoleId
+        ]);
+
+        DB::table('permission_role')->insert([
+            'permission_id' => $fetchFilesPermissionId,
+            'role_id' => $driveManagerRoleId
+        ]);
+
+        DB::table('permission_role')->insert([
+            'permission_id' => $updateFilesPermissionId,
+            'role_id' => $driveManagerRoleId
+        ]);
+
+        DB::table('permission_role')->insert([
+            'permission_id' => $moveFilesPermissionId,
+            'role_id' => $driveManagerRoleId
+        ]);
+
+        DB::table('permission_role')->insert([
+            'permission_id' => $downloadFilesPermissionId,
+            'role_id' => $driveManagerRoleId
+        ]);
+
+        DB::table('permission_role')->insert([
+            'permission_id' => $trashFilesPermissionId,
+            'role_id' => $driveManagerRoleId
+        ]);
+
+        DB::table('permission_role')->insert([
+            'permission_id' => $deleteFilesPermissionId,
+            'role_id' => $driveManagerRoleId
+        ]);
+
+        DB::table('permission_role')->insert([
+            'permission_id' => $restoreFilesPermissionId,
             'role_id' => $driveManagerRoleId
         ]);
     }

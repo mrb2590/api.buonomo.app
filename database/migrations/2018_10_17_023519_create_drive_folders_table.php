@@ -56,6 +56,6 @@ class CreateDriveFoldersTable extends Migration
             $table->dropColumn('folder_id');
         });
 
-        Schema::dropIfExists('folders');
+        Schema::dropIfExists('drive_folders');
     }
 }
