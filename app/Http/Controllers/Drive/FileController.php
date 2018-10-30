@@ -52,14 +52,20 @@ class FileController extends Controller
                 abort(403, 'You\'re not authorized to fetch files you don\'t own.');
             }
 
-            return File::where('owned_by_id', $request->input('owned_by_id'))->paginate($limit);
+            $query = File::where('owned_by_id', $request->input('owned_by_id'))->paginate($limit);
+
+            if ($limit) {
+                return $query->paginate($limit);
+            }
+            
+            return $query->get();
         }
 
         if ($request->user()->cannot('fetch_files')) {
             abort(403, 'You\'re not authorized to fetch files you don\'t own.');
         }
 
-        return File::paginate($limit);
+        return $limit ? File::paginate($limit) : File::all();
     }
 
     /**

@@ -62,14 +62,20 @@ class FolderController extends Controller
                 abort(403, 'You\'re not authorized to fetch folders you don\'t own.');
             }
 
-            return Folder::where('owned_by_id', $request->input('owned_by_id'))->paginate($limit);
+            $query = Folder::where('owned_by_id', $request->input('owned_by_id'));
+
+            if ($limit) {
+                return $query->paginate($limit);
+            }
+    
+            return $query->get();
         }
 
         if ($request->user()->cannot('fetch_folders')) {
             abort(403, 'You\'re not authorized to fetch folders you don\'t own.');
         }
 
-        return Folder::paginate($limit);
+        return $limti ? Folder::paginate($limit) : Folder::all();
     }
 
     /**
