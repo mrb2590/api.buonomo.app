@@ -22,11 +22,11 @@ class Server
     }
 
     /**
-     * Return all server stats.
+     * Return all server data.
      *
      * @return array
      */
-    public static function stats()
+    public static function data()
     {
         $totalSpace = disk_total_space(storage_path());
 

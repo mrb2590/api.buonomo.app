@@ -53,6 +53,12 @@ Route::middleware(['auth:api', 'verified'])->prefix('v1')->group(function() {
     // Remove a user's role
     Route::delete('/users/{user}/roles', 'UserRoleController@remove')->name('users.roles.remove');
 
+    /* Drive Server */
+
+    // Fetch server data
+    Route::get('/drive/server', 'Drive\ServerController@fetch')
+        ->name('drive.server.fetch');
+
     /* Drive Folders */
 
     // Fetch the current user's folder
