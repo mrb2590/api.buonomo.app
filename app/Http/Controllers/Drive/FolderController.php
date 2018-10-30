@@ -270,11 +270,7 @@ class FolderController extends Controller
             abort(409, $msg);
         }
 
-        // Update folder owner's used drive bytes
-        $trashedFolder->owned_by->used_drive_bytes -= $trashedFolder->size;
-        $trashedFolder->owned_by->save();
-
-        $trashedFolder->forceDelete();
+        $trashedFolder->permanentDelete();
 
         return response('', 204);
     }

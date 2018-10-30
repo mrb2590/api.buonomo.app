@@ -2,10 +2,15 @@
 
 namespace App\Models\Drive;
 
+use App\Models\Drive\Folder;
 use App\Models\Drive\Server;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class File extends Model
 {
@@ -125,7 +130,7 @@ class File extends Model
     /**
      * Move this file to another folder.
      *
-     * @param  \Illuminate\Http\Request $request
+     * @param  \App\Models\Drive\Folder $folder
      */
     public function moveTo(Folder $folder)
     {
@@ -133,16 +138,16 @@ class File extends Model
         $this->folder->size -= $this->size;
         $this->folder->save();
 
-        $that = $this;
+        $size = $this->size;
 
-        $this->folder->recursiveForEachParent(function($folder) use ($that) {
-            $folder->size -= $that->size;
-            $folder-save();
+        $this->folder->recursiveForEachParent(function($folder) use ($size) {
+            $folder->size -= $size;
+            $folder->save();
         });
 
         // If new owner, update the owner
         if ($this->owned_by_id !== $folder->owned_by_id) {
-            // Update the original owner's drive bytes
+            // Update the current owner's drive bytes
             $this->owned_by->used_drive_bytes -= $this->size;
             $this->owned_by->save();
 
@@ -165,11 +170,120 @@ class File extends Model
         $this->folder->size += $this->size;
         $this->folder->save();
 
+        $size = $this->size;
+
+        $this->folder->recursiveForEachParent(function($folder) use ($size) {
+            $folder->size += $size;
+            $folder->save();
+        });
+    }
+
+    /**
+     * Save file to the file system.
+     *
+     * @param  \Illuminate\Http\UploadedFile $file
+     * @param  \App\Models\Drive\Folder $parent
+     * @param  \App\Models\User $user
+     * @return bool 
+     */
+    public function saveToStorage(UploadedFile $uploadedFile, Folder $parent, User $user)
+    {
+        // Need to create the filename ourselves because Laravel will not always use the correct
+        // extension
+        $filename = Str::random(40).'.'.$uploadedFile->getClientOriginalExtension();
+
+        $date = Carbon::now();
+        $storagePath = $date->format('Y').'/'.$date->format('m').'/'.$date->format('d');
+
+        // Store file
+        $path = Storage::disk('private')
+            ->putFileAs($storagePath, $uploadedFile, $filename);
+
+        $pathInfo = pathinfo($path);
+        $name = pathinfo($uploadedFile->getClientOriginalName())['filename'];
+
+        $this->filename = $pathInfo['filename'];
+        $this->extension = strtolower($pathInfo['extension']);
+        $this->storage_basename = $pathInfo['basename'];
+        $this->storage_path = '/'.$storagePath;
+        $this->mime_type = $uploadedFile->getMimeType();
+        $this->size = Storage::disk('private')->size($path);
+        $this->folder_id = $parent->id;
+        $this->owned_by_id = $user->id;
+        $this->created_by_id = $user->id;
+        $this->updated_by_id = $user->id;
+        $this->name = $name;
+
+        $newUserDriveBytes = $parent->owned_by->used_drive_bytes + $this->size;
+
+        // Make sure owner has enough allocated storage (incase client size was incorrect)
+        if ($newUserDriveBytes > $parent->owned_by->allocated_drive_bytes) {
+            Storage::disk('private')->delete($path);
+            return false;
+        }
+
+        // Append number to filenames if it's is already used in a folder
+        $i = 0;
+        $existingFile = true;
+
+        while ($existingFile) {
+            // Check if a file exists with the same name
+            $existingFile = File::where('folder_id', $this->folder_id)
+                ->where('name', $this->name)->first();
+            
+            if (!$existingFile) {
+                $this->save();
+            } else {
+                $this->name = $name.' ('.++$i.')';
+
+                // Do not exceed 1000 copies / failsafe to stop impending doom
+                if ($i > 1000) {
+                    return false;
+                }
+            }
+        }
+
+        // Update owner's used storage
+        $this->owned_by->used_drive_bytes = $newUserDriveBytes;
+        $this->owned_by->save();
+
+        // Update the parent folders' storagee
+        $this->folder->size += $this->size;
+        $this->folder->save();
+
         $that = $this;
 
         $this->folder->recursiveForEachParent(function($folder) use ($that) {
             $folder->size += $that->size;
-            $folder-save();
+            $folder->save();
         });
+
+        return true;
+    }
+
+    /**
+     * Delete the folder from storage and database.
+     */
+    public function permanentDelete()
+    {
+        // Update file owner's used drive bytes
+        $this->owned_by->used_drive_bytes -= $this->size;
+        $this->owned_by->save();
+
+        // Update parent folders sizes
+        $this->folder->size -= $this->size;
+        $this->folder->save();
+
+        $size = $this->size;
+
+        $this->folder->recursiveForEachParent(function($folder) use ($size) {
+            $folder->size -= $size;
+            $folder->save();
+        });
+
+        // Delete the file from storage
+        Storage::disk('private')->delete($this->storage_path.'/'.$this->storage_basename);
+
+        $this->forceDelete();
     }
 }

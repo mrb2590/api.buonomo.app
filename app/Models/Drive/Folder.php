@@ -129,20 +129,25 @@ class Folder extends Model
     }
 
     /**
+     * Get the files in this folder.
+     */
+    public function files()
+    {
+        return $this->hasMany(Folder::class, 'folder_id', 'id');
+    }
+
+    /**
      * Move this folder to another folder.
      *
-     * @param  \Illuminate\Http\Request $request
+     * @param  \App\Models\Drive\Folder $folder
      */
     public function moveTo(Folder $folder)
     {
-        // Update current parents' folder sizes
-        $this->folder->size -= $this->size;
-        $this->folder->save();
+        // Update current parent folder sizes
+        $size = $this->size;
 
-        $that = $this;
-
-        $this->recursiveForEachParent(function($folder) use ($that) {
-            $folder->size -= $that->size;
+        $this->recursiveForEachParent(function($folder) use ($size) {
+            $folder->size -= $size;
             $folder->save();
         });
 
@@ -156,10 +161,15 @@ class Folder extends Model
             $this->owned_by_id = $folder->owned_by_id;
             $this->save();
 
-            // Update this folder's children's owner
+            // Update this folder's child folder's and file's owner
             $this->recursiveForEachChild(function($childFolder) use ($folder) {
                 $childFolder->owned_by_id = $folder->owned_by_id;
                 $childFolder->save();
+
+                foreach ($childFolder->files as $file) {
+                    $file->owned_by_id = $folder->owned_by_id;
+                    $file->save();
+                }
             });
 
             // Update the new owner's used drive bytes
@@ -174,13 +184,9 @@ class Folder extends Model
 
         // Update all new parents' folder sizes
         $this->load('folder');
-        $this->folder->size += $this->size;
-        $this->folder->save();
-
-        $that = $this;
-
-        $this->recursiveForEachParent(function($folder) use ($that) {
-            $folder->size += $that->size;
+    
+        $this->recursiveForEachParent(function($folder) use ($size) {
+            $folder->size += $size;
             $folder->save();
         });
     }
@@ -242,5 +248,37 @@ class Folder extends Model
 
             $folder->recursiveForEachChild($callback);
         }
+    }
+
+    /**
+     * Delete the folder from storage and database.
+     */
+    public function permanentDelete()
+    {
+        // Update folder owner's used drive bytes
+        $this->owned_by->used_drive_bytes -= $this->size;
+        $this->owned_by->save();
+
+        $size = $this->size;
+
+        // Update the parent folder's sizes
+        $this->recursiveForEachParent(function($folder) use ($size) {
+            $folder->size -= $size;
+            $folder->save();
+        });
+
+        // Delete all files from the folder
+        foreach ($this->files as $file) {
+            $file->forceDelete();
+        }
+
+        // Recursively delete all child folders
+        $this->recursiveForEachChild(function($folder) {
+            foreach ($folder->files as $file) {
+                $folder->permanentDelete();
+            }
+        });
+
+        $this->forceDelete();
     }
 }

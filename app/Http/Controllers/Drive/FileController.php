@@ -6,10 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Drive\File;
 use App\Models\Drive\Folder;
 use App\Traits\HasPaging;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class FileController extends Controller
 {
@@ -86,62 +83,20 @@ class FileController extends Controller
             abort(403, 'You are not authorized to upload files in other user\'s folders.');
         }
 
-        // Need to create the filename ourselves because Laravel will not always use the correct
-        // extension
-        $filename = Str::random(40).'.'.$request->file('file')->getClientOriginalExtension();
-        $date = Carbon::now();
-        $filePath = $date->format('Y').'/'.$date->format('m').'/'.$date->format('d');
-        $path = Storage::disk('private')->putFileAs($filePath, $request->file('file'), $filename);
-        $originalFilename = pathinfo($request->file('file')->getClientOriginalName())['filename'];
-        $pathInfo = pathinfo($path);
+        $newUserDriveBytes = $parentFolder->owned_by->used_drive_bytes +
+            $request->file('file')->getClientSize();
 
-        $file = new File;
-        $file->filename = $pathInfo['filename'];
-        $file->extension = strtolower($pathInfo['extension']);
-        $file->storage_basename = $pathInfo['basename'];
-        $file->storage_path = '/'.$filePath;
-        $file->mime_type = $request->file('file')->getMimeType();
-        $file->size = Storage::disk('private')->size($path);
-        $file->folder_id = $request->input('folder_id');
-        $file->owned_by_id = $request->user()->id;
-        $file->created_by_id = $request->user()->id;
-        $file->updated_by_id = $request->user()->id;
-        $file->name = $originalFilename;
-
-        $newUserDriveBytes = $parentFolder->owned_by->used_drive_bytes + $file->size;
-
+        // Make sure owner has ednough allocated storage
         if ($newUserDriveBytes > $parentFolder->owned_by->allocated_drive_bytes) {
-            Storage::disk('private')->delete($path);
             abort(403, 'The new owner does not have enough drive storage.');
         }
 
-        $i = 0;
-        $existingFile = true;
+        $file = new File;
+        $saved = $file->saveToStorage($request->file('file'), $parentFolder, $request->user());
 
-        while ($existingFile) {
-            // Check if a file exists with the same name
-            $existingFile = File::where('folder_id', $file->folder_id)
-                ->where('name', $file->name)->first();
-            
-            if (!$existingFile) {
-                $file->save();
-            } else {
-                $file->name = $originalFilename.' ('.++$i.')';
-            }
+        if (!$saved) {
+            abort(500, 'Could not save the file to the server.');
         }
-
-        // Update owner's used storage
-        $file->owned_by->used_drive_bytes = $newUserDriveBytes;
-        $file->owned_by->save();
-
-        // Update the parent folders' storagee
-        $file->folder->size += $file->size;
-        $file->folder->save();
-
-        $file->folder->recursiveForEachParent(function($folder) use ($file) {
-            $folder->size += $file->size;
-            $folder->save();
-        });
 
         return $file;
     }
@@ -263,11 +218,7 @@ class FileController extends Controller
             abort(403, 'Your\'re not authorized to delete files you don\'t own.');
         }
 
-        // Update file owner's used drive bytes
-        $trashedFile->owned_by->used_drive_bytes -= $trashedFile->size;
-        $trashedFile->owned_by->save();
-
-        $trashedFile->forceDelete();
+        $trashedFile->permanentDelete();
 
         return response('', 204);
     }
