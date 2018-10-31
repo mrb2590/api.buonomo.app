@@ -28,7 +28,7 @@ class File extends Model
      *
      * @var array
      */
-    protected $dates = ['deleted_at'];
+    protected $dates = ['created_at', 'updated_at', 'deleted_at'];
 
     /**
      * The attributes that should be cast to native types.
@@ -202,8 +202,8 @@ class File extends Model
         $pathInfo = pathinfo($path);
         $name = pathinfo($uploadedFile->getClientOriginalName())['filename'];
 
-        $this->filename = $pathInfo['filename'];
         $this->extension = strtolower($pathInfo['extension']);
+        $this->storage_filename = $pathInfo['filename'];
         $this->storage_basename = $pathInfo['basename'];
         $this->storage_path = '/'.$storagePath;
         $this->mime_type = $uploadedFile->getMimeType();

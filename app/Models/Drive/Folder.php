@@ -2,6 +2,7 @@
 
 namespace App\Models\Drive;
 
+use App\Models\Drive\File;
 use App\Models\Drive\Server;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
@@ -23,7 +24,7 @@ class Folder extends Model
      *
      * @var array
      */
-    protected $dates = ['deleted_at'];
+    protected $dates = ['created_at', 'updated_at', 'deleted_at'];
 
     /**
      * The attributes that should be cast to native types.
@@ -133,7 +134,7 @@ class Folder extends Model
      */
     public function files()
     {
-        return $this->hasMany(Folder::class, 'folder_id', 'id');
+        return $this->hasMany(File::class, 'folder_id', 'id');
     }
 
     /**
@@ -208,8 +209,22 @@ class Folder extends Model
 
         $zip->addEmptyDir(substr($this->path, 1, strlen($this->path) - 1));
 
+        foreach ($this->files as $file) {
+            $zip->addFile(
+                storage_path('app/private'.$file->storage_path.'/'.$file->storage_basename),
+                substr($file->path, 1, strlen($file->path) - 1)
+            );
+        }
+
         $this->recursiveForEachChild(function($folder) use (&$zip) {
             $zip->addEmptyDir(substr($folder->path, 1, strlen($folder->path) - 1));
+
+            foreach ($folder->files as $file) {
+                $zip->addFile(
+                    storage_path('app/private'.$file->storage_path.'/'.$file->storage_basename),
+                    substr($file->path, 1, strlen($file->path) - 1)
+                );
+            }
         });
 
         if ($zip->close() !== true) {

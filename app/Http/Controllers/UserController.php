@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\User as UserResource;
 use App\Models\Drive\Folder;
 use App\Models\User;
 use App\Traits\HasPaging;
@@ -30,7 +31,7 @@ class UserController extends Controller
      */
     public function fetchCurrent(Request $request)
     {
-        return $request->user();
+        return new UserResource($request->user());
     }
 
     /**
@@ -47,12 +48,12 @@ class UserController extends Controller
         }
 
         if ($user) {
-            return $user;
+            return new UserResource($user);
         }
 
         $limit = $this->validatePaging($request);
 
-        return User::paginate($limit);
+        return UserResource::collection(User::paginate($limit));
     }
 
     /**
@@ -91,7 +92,7 @@ class UserController extends Controller
         // Create user's root folder
         $user->createRootFolder();
 
-        return $user;
+        return new UserResource($user);
     }
 
     /**
@@ -117,7 +118,7 @@ class UserController extends Controller
         }
 
         // Make sure current user set other's 
-        if ($request->has('verified') && $request->user()->cannot('verified')) {
+        if ($request->has('verified') && $request->user()->cannot('update_users')) {
             abort(403, 'You are not authorized to update your own verification.');
         }
 
@@ -142,7 +143,7 @@ class UserController extends Controller
 
         $user->fill($data)->save();
 
-        return $user;
+        return new UserResource($user);
     }
 
     /**
@@ -196,6 +197,6 @@ class UserController extends Controller
 
         $trashedUser->restore();
 
-        return $trashedUser;
+        return new UserResource($trashedUser);
     }
 }

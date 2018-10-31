@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\Role as RoleResource;
 use App\Models\User;
 use App\Traits\HasPaging;
 use Illuminate\Http\Request;
@@ -30,7 +31,7 @@ class UserRoleController extends Controller
     {
         $limit = $this->validatePaging($request);
 
-        return $request->user()->roles()->paginate($limit);
+        return RoleResource::collection($request->user()->roles()->paginate($limit));
     }
 
     /**
@@ -48,7 +49,7 @@ class UserRoleController extends Controller
 
         $limit = $this->validatePaging($request);
 
-        return $user->roles()->paginate($limit);
+        return RoleResource::collection($user->roles()->paginate($limit));
     }
 
     /**

@@ -15,13 +15,12 @@ trait HasPaging
     protected function validatePaging(Request $request)
     {
         // Default limit
-        // 0 == all
         $limit = 10;
 
         if ($request->has('limit')) {
             $this->validate($request, [
                 'page' => 'nullable|integer',
-                'limit' => 'nullable|integer|in:0,10,25,50,100',
+                'limit' => 'nullable|integer|in:10,25,50,100',
             ]);
 
             $limit = (int) $request->query('limit');

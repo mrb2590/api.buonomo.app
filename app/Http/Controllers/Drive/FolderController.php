@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Drive;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Drive\Folder as FolderResource;
 use App\Models\Drive\Folder;
 use App\Traits\HasPaging;
 use Illuminate\Http\Request;
@@ -22,14 +23,14 @@ class FolderController extends Controller
     }
 
     /**
-     * Return the current user's folder.
+     * Return the current user's root folder.
      *
      * @param  \Illuminate\Http\Request $request
      * @return \Illuminate\Http\Response
      */
     public function fetchCurrent(Request $request)
     {
-        return $request->user()->folder;
+        return new FolderResource($request->user()->folder);
     }
 
     /**
@@ -48,7 +49,7 @@ class FolderController extends Controller
                 abort(403, 'You\'re not authorized to fetch folders you don\'t own.');
             }
 
-            return $folder;
+            return new FolderResource($folder);
         }
 
         $this->validate($request, ['owned_by_id' => 'nullable|integer|exists:users,id']);
@@ -64,18 +65,14 @@ class FolderController extends Controller
 
             $query = Folder::where('owned_by_id', $request->input('owned_by_id'));
 
-            if ($limit) {
-                return $query->paginate($limit);
-            }
-    
-            return $query->get();
+            return FolderResource::collection($query->paginate($limit));
         }
 
         if ($request->user()->cannot('fetch_folders')) {
             abort(403, 'You\'re not authorized to fetch folders you don\'t own.');
         }
 
-        return $limti ? Folder::paginate($limit) : Folder::all();
+        return FolderResource::collection(Folder::paginate($limit));
     }
 
     /**
@@ -85,7 +82,47 @@ class FolderController extends Controller
      * @param  \App\Models\Drive\Folder $folder
      * @return \Illuminate\Http\Response
      */
-    public function fetchChildren(Request $request, Folder $folder)
+    public function fetchFolders(Request $request, Folder $folder)
+    {
+        if ($request->user()->id !== $folder->owned_by_id &&
+            $request->user()->cannot('fetch_folders')
+        ) {
+            abort(403, 'You\'re not authorized to fetch folders from folders you don\'t own.');
+        }
+
+        $limit = $this->validatePaging($request);
+
+        return FolderResource::collection($folder->folders()->paginate($limit));
+    }
+
+    /**
+     * Return all child files of a folder
+     *
+     * @param  \Illuminate\Http\Request $request
+     * @param  \App\Models\Drive\Folder $folder
+     * @return \Illuminate\Http\Response
+     */
+    public function fetchFiles(Request $request, Folder $folder)
+    {
+        if ($request->user()->id !== $folder->owned_by_id &&
+            $request->user()->cannot('fetch_files')
+        ) {
+            abort(403, 'You\'re not authorized to fetch files from folders you don\'t own.');
+        }
+
+        $limit = $this->validatePaging($request);
+
+        return FolderResource::collection($folder->files()->paginate($limit));
+    }
+
+    /**
+     * Return a single folder with it's direct child folders and files.
+     *
+     * @param  \Illuminate\Http\Request $request
+     * @param  \App\Models\Drive\Folder $folder
+     * @return \Illuminate\Http\Response
+     */
+    public function fetchList(Request $request, Folder $folder)
     {
         if ($request->user()->id !== $folder->owned_by_id &&
             $request->user()->cannot('fetch_folders')
@@ -93,9 +130,9 @@ class FolderController extends Controller
             abort(403, 'You\'re not authorized to fetch folders you don\'t own.');
         }
 
-        $limit = $this->validatePaging($request);
+        $folder->load('folders', 'files');
 
-        return $folder->folders()->paginate($limit);
+        return new FolderResource($folder);
     }
 
     /**
@@ -132,7 +169,7 @@ class FolderController extends Controller
             abort(409, 'A folder with the name "'.$folder->name.'" already exists.');
         }
 
-        return $folder;
+        return new FolderResource($folder);
     }
 
     /**
@@ -155,7 +192,7 @@ class FolderController extends Controller
         $folder->fill($request->all())->save();
         $folder->updated_by_id = $request->user()->id;
 
-        return $folder;
+        return new FolderResource($folder);
     }
 
     /**
@@ -298,6 +335,6 @@ class FolderController extends Controller
 
         $trashedFolder->restore();
 
-        return $trashedFolder;
+        return new FolderResource($trashedFolder);
     }
 }

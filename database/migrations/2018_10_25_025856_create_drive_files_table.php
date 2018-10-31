@@ -16,8 +16,8 @@ class CreateDriveFilesTable extends Migration
         Schema::create('drive_files', function (Blueprint $table) {
             $table->increments('id');
             $table->string('name');
-            $table->string('filename');
             $table->string('extension');
+            $table->string('storage_filename');
             $table->string('storage_basename');
             $table->string('storage_path');
             $table->string('mime_type');

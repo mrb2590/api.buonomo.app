@@ -70,12 +70,16 @@ Route::middleware(['auth:api', 'verified'])->prefix('v1')->group(function() {
         ->name('drive.folders.fetch');
 
     // Fetch all folders in a folder
-    Route::get('/drive/folders/{folder}/folders', 'Drive\FolderController@fetchChildren')
+    Route::get('/drive/folders/{folder}/folders', 'Drive\FolderController@fetchFolders')
         ->name('drive.folders.children.fetch');
 
     // Fetch all files in a folder
-    // Route::get('/drive/folders/{file}/files', 'Drive\FolderController@fetchFiles')
-    //     ->name('drive.folders.files.fetch');
+    Route::get('/drive/folders/{folder}/files', 'Drive\FolderController@fetchFiles')
+        ->name('drive.folders.files.fetch');
+
+    // Fetch all files and folders in a folder
+    Route::get('/drive/folders/{folder}/list', 'Drive\FolderController@fetchList')
+        ->name('drive.folders.list.fetch');
 
     // Create a folder
     Route::post('/drive/folders', 'Drive\FolderController@store')->name('drive.folders.create');

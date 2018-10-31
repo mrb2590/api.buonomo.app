@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Drive;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Drive\File as FileResource;
 use App\Models\Drive\File;
 use App\Models\Drive\Folder;
 use App\Traits\HasPaging;
@@ -38,7 +39,7 @@ class FileController extends Controller
                 abort(403, 'You\'re not authorized to fetch files you don\'t own.');
             }
 
-            return $file;
+            return new FileResource($file);
         }
 
         $this->validate($request, ['owned_by_id' => 'nullable|integer|exists:users,id']);
@@ -54,18 +55,14 @@ class FileController extends Controller
 
             $query = File::where('owned_by_id', $request->input('owned_by_id'))->paginate($limit);
 
-            if ($limit) {
-                return $query->paginate($limit);
-            }
-            
-            return $query->get();
+            return FileResource::collection($query->paginate($limit));
         }
 
         if ($request->user()->cannot('fetch_files')) {
             abort(403, 'You\'re not authorized to fetch files you don\'t own.');
         }
 
-        return $limit ? File::paginate($limit) : File::all();
+        return FileResource::collection(File::paginate($limit));
     }
 
     /**
@@ -104,7 +101,7 @@ class FileController extends Controller
             abort(500, 'Could not save the file to the server.');
         }
 
-        return $file;
+        return new FileResource($file);
     }
 
     /**
@@ -127,7 +124,7 @@ class FileController extends Controller
         $file->fill($request->all())->save();
         $file->updated_by_id = $request->user()->id;
 
-        return $file;
+        return new FileResource($file);
     }
 
     /**
@@ -246,6 +243,6 @@ class FileController extends Controller
 
         $trashedFile->restore();
 
-        return $trashedFile;
+        return new FileResource($trashedFile);
     }
 }
