@@ -5,6 +5,7 @@ namespace App\Models\Drive;
 use App\Models\Drive\Folder;
 use App\Models\Drive\Server;
 use App\Models\User;
+use App\Traits\Drive\HasFolderPath;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -14,7 +15,7 @@ use Illuminate\Support\Str;
 
 class File extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, HasFolderPath;
 
     /**
      * The table associated with the model
