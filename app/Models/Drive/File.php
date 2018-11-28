@@ -44,13 +44,7 @@ class File extends Model
      *
      * @var array
      */
-    protected $casts = [
-        'folder_id' => 'integer',
-        'size' => 'integer',
-        'created_by_id' => 'integer',
-        'owned_by_id' => 'integer',
-        'updated_by_id' => 'integer',
-    ];
+    protected $casts = ['size' => 'integer'];
 
     /**
      * The attributes that are mass assignable.
@@ -71,7 +65,7 @@ class File extends Model
      *
      * @var array
      */
-    // protected $with = ['owned_by', 'created_by', 'updated_by'];
+    protected $with = ['owned_by', 'created_by', 'updated_by'];
 
     /**
      * Get the folder path.
@@ -112,27 +106,24 @@ class File extends Model
     /**
      * Get the owner of the folder.
      */
-    public function ownedBy()
+    public function owned_by()
     {
-        // return $this->belongsTo(User::class, 'owned_by_id')->publicInfo();
         return $this->belongsTo(User::class, 'owned_by_id');
     }
 
     /**
      * Get the creator of the folder.
      */
-    public function createdBy()
+    public function created_by()
     {
-        // return $this->belongsTo(User::class, 'created_by_id')->publicInfo();
         return $this->belongsTo(User::class, 'created_by_id');
     }
 
     /**
      * Get the user who last updated the folder.
      */
-    public function updatedBy()
+    public function updated_by()
     {
-        // return $this->belongsTo(User::class, 'updated_by_id')->publicInfo();
         return $this->belongsTo(User::class, 'updated_by_id');
     }
 

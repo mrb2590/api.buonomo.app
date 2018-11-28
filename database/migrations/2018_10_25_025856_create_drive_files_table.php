@@ -21,8 +21,8 @@ class CreateDriveFilesTable extends Migration
             $table->string('storage_basename');
             $table->string('storage_path');
             $table->string('mime_type');
-            $table->bigInteger('size')->unsigned(); 
-            $table->uuid('folder_id')->nullable();
+            $table->bigInteger('size')->unsigned();
+            $table->uuid('folder_id');
             $table->uuid('owned_by_id');
             $table->uuid('created_by_id');
             $table->uuid('updated_by_id');

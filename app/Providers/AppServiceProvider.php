@@ -24,6 +24,11 @@ class AppServiceProvider extends ServiceProvider
             $client->id = Uuid::uuid4()->toString();
         });
 
+        // Turn off auto incrementing for passport clients
+        Client::retrieved(function (Client $client) {
+            $client->incrementing = false;
+        });
+
         // Database debugging
         if (config('database.debug') == 'true' && !App::environment('production')) {
             DB::listen(function ($query) {

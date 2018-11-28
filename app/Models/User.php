@@ -36,7 +36,6 @@ class User extends Authenticatable implements MustVerifyEmail
      * @var array
      */
     protected $casts = [
-        'folder_id' => 'integer',
         'allocated_drive_bytes' => 'integer',
         'used_drive_bytes' => 'integer',
     ];

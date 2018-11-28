@@ -42,18 +42,18 @@ class FileController extends Controller
             return new FileResource($file);
         }
 
-        $this->validate($request, ['owned_by_id' => 'nullable|integer|exists:users,id']);
+        $this->validate($request, ['owned_by_id' => 'nullable|uuid|exists:users,id']);
 
         $limit = $this->validatePaging($request);
 
         if ($request->has('owned_by_id')) {
-            if ($request->user()->id !== (int) $request->input('owned_by_id')&&
+            if ($request->user()->id !== (int) $request->input('owned_by_id') &&
                 $request->user()->cannot('fetch_files')
             ) {
                 abort(403, 'You\'re not authorized to fetch files you don\'t own.');
             }
 
-            $query = File::where('owned_by_id', $request->input('owned_by_id'))->paginate($limit);
+            $query = File::where('owned_by_id', $request->input('owned_by_id'));
 
             return FileResource::collection($query->paginate($limit));
         }
@@ -75,7 +75,7 @@ class FileController extends Controller
     {
         $this->validate($request, [
             'file' => 'required|file|max:20000000',
-            'folder_id' => 'nullable|integer|exists:drive_folders,id',
+            'folder_id' => 'required|uuid|exists:drive_folders,id',
         ]);
 
         $parentFolder = Folder::find($request->input('folder_id'));
@@ -86,8 +86,8 @@ class FileController extends Controller
             abort(403, 'You are not authorized to upload files in other user\'s folders.');
         }
 
-        $newUserDriveBytes = $parentFolder->owned_by->used_drive_bytes +
-            $request->file('file')->getClientSize();
+        $newUserDriveBytes = $parentFolder->owned_by->used_drive_bytes;
+        $newUserDriveBytes += $request->file('file')->getClientSize();
 
         // Make sure owner has ednough allocated storage
         if ($newUserDriveBytes > $parentFolder->owned_by->allocated_drive_bytes) {
@@ -136,7 +136,7 @@ class FileController extends Controller
      */
     public function move(Request $request, File $file)
     {
-        $this->validate($request, ['folder_id' => 'required|integer|exists:drive_folders,id']);
+        $this->validate($request, ['folder_id' => 'required|uuid|exists:drive_folders,id']);
 
         $newParentFolder = Folder::find($request->input('folder_id'));
 
@@ -181,8 +181,8 @@ class FileController extends Controller
         }
 
         return response()->download(
-            storage_path('app/private'.$file->storage_path.'/'.$file->storage_basename),
-            $file->name.'.'.$file->extension
+            storage_path('app/private' . $file->storage_path . '/' . $file->storage_basename),
+            $file->name . '.' . $file->extension
         );
     }
 

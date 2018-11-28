@@ -52,12 +52,12 @@ class FolderController extends Controller
             return new FolderResource($folder);
         }
 
-        $this->validate($request, ['owned_by_id' => 'nullable|integer|exists:users,id']);
+        $this->validate($request, ['owned_by_id' => 'nullable|uuid|exists:users,id']);
 
         $limit = $this->validatePaging($request);
 
         if ($request->has('owned_by_id')) {
-            if ($request->user()->id !== (int) $request->input('owned_by_id')&&
+            if ($request->user()->id !== (int) $request->input('owned_by_id') &&
                 $request->user()->cannot('fetch_folders')
             ) {
                 abort(403, 'You\'re not authorized to fetch folders you don\'t own.');
@@ -145,7 +145,7 @@ class FolderController extends Controller
     {
         $this->validate($request, [
             'name' => 'required|string|max:255|regex:/^(?!\.+)[\w,\s-\.]+[\w,\s-]$/',
-            'folder_id' => 'required|integer|exists:drive_folders,id',
+            'folder_id' => 'required|uuid|exists:drive_folders,id',
         ]);
 
         $parentFolder = Folder::find($request->input('folder_id'));
@@ -166,7 +166,7 @@ class FolderController extends Controller
         try {
             $folder->save();
         } catch (\Illuminate\Database\QueryException $e) {
-            abort(409, 'A folder with the name "'.$folder->name.'" already exists.');
+            abort(409, 'A folder with the name "' . $folder->name . '" already exists.');
         }
 
         return new FolderResource($folder);
@@ -204,7 +204,7 @@ class FolderController extends Controller
      */
     public function move(Request $request, Folder $folder)
     {
-        $this->validate($request, ['folder_id' => 'required|integer|exists:drive_folders,id']);
+        $this->validate($request, ['folder_id' => 'required|uuid|exists:drive_folders,id']);
 
         $newParentFolder = Folder::find($request->input('folder_id'));
 
@@ -261,7 +261,7 @@ class FolderController extends Controller
 
         $zipPath = $folder->packageZip();
 
-        return response()->download($zipPath, $folder->name.'.zip')->deleteFileAfterSend(true);
+        return response()->download($zipPath, $folder->name . '.zip')->deleteFileAfterSend(true);
     }
 
     /**
