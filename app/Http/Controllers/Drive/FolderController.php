@@ -286,7 +286,7 @@ class FolderController extends Controller
             abort(409, $msg);
         }
 
-        $folder->delete();
+        $folder->trash();
 
         return response('', 204);
     }

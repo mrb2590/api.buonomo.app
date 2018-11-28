@@ -236,16 +236,21 @@ class Folder extends Model
      * Recursively traverse all parent folders.
      *
      * @param  \Closure $callback
+     * @param  bool  $withTrashed
      */
-    public function recursiveForEachParent(\Closure $callback)
+    public function recursiveForEachParent(\Closure $callback, $withTrashed = false)
     {
         if ($this->folder_id !== null) {
             // Do this so the relationship is not appended to the original object
-            $folder = Folder::find($this->folder_id);
+            if ($withTrashed) {
+                $folder = Folder::withTrashed()->find($this->folder_id);
+            } else {
+                $folder = Folder::find($this->folder_id);
+            }
 
             $callback($folder);
 
-            $folder->recursiveForEachParent($callback);
+            $folder->recursiveForEachParent($callback, $withTrashed);
         }
     }
 
@@ -253,16 +258,38 @@ class Folder extends Model
      * Recursively traverse all child folders.
      *
      * @param  \Closure $callback
+     * @param  bool  $withTrashed
+     * @param  int  $depth
      */
-    public function recursiveForEachChild(\Closure $callback, $depth = 1)
+    public function recursiveForEachChild(\Closure $callback, $withTrashed = false, $depth = 1)
     {
-        foreach ($this->folders as $folder) {
+        $folders = $withTrashed ? $this->folders()->withTrashed()->get() : $this->folders;
+
+        foreach ($folders as $folder) {
             $currentFolderDepth = $depth;
             $callback($folder, $depth);
             $depth++;
-            $folder->recursiveForEachChild($callback, $depth);
+            $folder->recursiveForEachChild($callback, $withTrashed, $depth);
             $depth = $currentFolderDepth; // Reset depth back to current folder depth
         }
+    }
+
+    /**
+     * Recursively trash the folder.
+     */
+    public function trash()
+    {
+        // Delete all files from the folder
+        foreach ($this->files as $file) {
+            $file->delete();
+        }
+
+        // Recursively delete all child folders
+        $this->recursiveForEachChild(function ($folder) {
+            $folder->delete();
+        });
+
+        $this->delete();
     }
 
     /**
@@ -270,29 +297,15 @@ class Folder extends Model
      */
     public function permanentDelete()
     {
-        // Update folder owner's used drive bytes
-        $this->owned_by->used_drive_bytes -= $this->size;
-        $this->owned_by->save();
-
-        $size = $this->size;
-
-        // Update the parent folder's sizes
-        $this->recursiveForEachParent(function ($folder) use ($size) {
-            $folder->size -= $size;
-            $folder->save();
-        });
-
         // Delete all files from the folder
-        foreach ($this->files as $file) {
-            $file->forceDelete();
+        foreach ($this->files()->withTrashed()->get() as $file) {
+            $file->permanentDelete();
         }
 
         // Recursively delete all child folders
         $this->recursiveForEachChild(function ($folder) {
-            foreach ($folder->files as $file) {
-                $folder->permanentDelete();
-            }
-        });
+            $folder->permanentDelete();
+        }, true);
 
         $this->forceDelete();
     }

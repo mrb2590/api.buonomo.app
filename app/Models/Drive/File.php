@@ -267,19 +267,21 @@ class File extends Model
     public function permanentDelete()
     {
         // Update file owner's used drive bytes
-        $this->owned_by->used_drive_bytes -= $this->size;
-        $this->owned_by->save();
+        $ownedBy = $this->owned_by()->withTrashed()->first();
+        $ownedBy->used_drive_bytes -= $this->size;
+        $ownedBy->save();
 
         // Update parent folders sizes
-        $this->folder->size -= $this->size;
-        $this->folder->save();
+        $folder = $this->folder()->withTrashed()->first();
+        $folder->size -= $this->size;
+        $folder->save();
 
         $size = $this->size;
 
-        $this->folder->recursiveForEachParent(function ($folder) use ($size) {
+        $folder->recursiveForEachParent(function ($folder) use ($size) {
             $folder->size -= $size;
             $folder->save();
-        });
+        }, true);
 
         // Delete the file from storage
         Storage::disk('private')->delete($this->storage_path . '/' . $this->storage_basename);
