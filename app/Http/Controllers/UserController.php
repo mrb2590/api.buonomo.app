@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\User as UserResource;
-use App\Models\Drive\Folder;
 use App\Models\User;
 use App\Traits\HasPaging;
 use Carbon\Carbon;
@@ -117,7 +116,7 @@ class UserController extends Controller
             abort(403, 'You are not authorized to update other users.');
         }
 
-        // Make sure current user set other's 
+        // Make sure current user set other's
         if ($request->has('verified') && $request->user()->cannot('update_users')) {
             abort(403, 'You are not authorized to update your own verification.');
         }

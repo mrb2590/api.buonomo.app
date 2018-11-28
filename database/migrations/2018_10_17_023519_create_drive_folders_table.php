@@ -14,32 +14,53 @@ class CreateDriveFoldersTable extends Migration
     public function up()
     {
         Schema::create('drive_folders', function (Blueprint $table) {
-            $table->increments('id');
+            $table->uuid('id');
             $table->string('name');
-            $table->integer('folder_id')->unsigned()->nullable();
+            $table->uuid('folder_id')->nullable();
             $table->bigInteger('size')->unsigned()->default(0);
-            $table->integer('owned_by_id')->unsigned();
-            $table->integer('created_by_id')->unsigned();
-            $table->integer('updated_by_id')->unsigned();
+            $table->uuid('owned_by_id');
+            $table->uuid('created_by_id');
+            $table->uuid('updated_by_id');
             $table->softDeletes();
             $table->timestamps();
 
-            $table->foreign('folder_id')->references('id')->on('drive_folders')
-                ->onDelete('cascade')->onUpdate('cascade');
-            $table->foreign('owned_by_id')->references('id')->on('users')
-                ->onDelete('cascade')->onUpdate('cascade');
-            $table->foreign('created_by_id')->references('id')->on('users')
-                ->onDelete('no action')->onUpdate('cascade');
-            $table->foreign('updated_by_id')->references('id')->on('users')
-                ->onDelete('no action')->onUpdate('cascade');
+            $table->primary('id');
+
+            $table->foreign('folder_id')
+                ->references('id')
+                ->on('drive_folders')
+                ->onDelete('cascade')
+                ->onUpdate('cascade');
+
+            $table->foreign('owned_by_id')
+                ->references('id')
+                ->on('users')
+                ->onDelete('cascade')
+                ->onUpdate('cascade');
+
+            $table->foreign('created_by_id')
+                ->references('id')
+                ->on('users')
+                ->onDelete('no action')
+                ->onUpdate('cascade');
+
+            $table->foreign('updated_by_id')
+                ->references('id')
+                ->on('users')
+                ->onDelete('no action')
+                ->onUpdate('cascade');
+
             $table->unique(['name', 'folder_id', 'owned_by_id']);
         });
 
         Schema::table('users', function (Blueprint $table) {
-            $table->integer('folder_id')->unsigned()->nullable()->after('password');
+            $table->uuid('folder_id')->nullable()->after('password');
 
-            $table->foreign('folder_id')->references('id')->on('drive_folders')
-                ->onDelete('set null')->onUpdate('cascade');
+            $table->foreign('folder_id')
+                ->references('id')
+                ->on('drive_folders')
+                ->onDelete('set null')
+                ->onUpdate('cascade');
         });
     }
 

@@ -6,6 +6,7 @@ use App\Models\Drive\Folder;
 use App\Models\Drive\Server;
 use App\Models\User;
 use App\Traits\Drive\HasFolderPath;
+use App\Traits\HasUuid;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -15,7 +16,14 @@ use Illuminate\Support\Str;
 
 class File extends Model
 {
-    use SoftDeletes, HasFolderPath;
+    use HasUuid, SoftDeletes, HasFolderPath;
+
+    /**
+     * Indicates if the IDs are auto-incrementing.
+     *
+     * @var bool
+     */
+    public $incrementing = false;
 
     /**
      * The table associated with the model
@@ -68,25 +76,25 @@ class File extends Model
     /**
      * Get the folder path.
      *
-     * @return string   
+     * @return string
      */
     protected function getPathAttribute()
     {
-        $path = $this->folder->name.'/'.$this->name.'.'.$this->extension;
+        $path = $this->folder->name . '/' . $this->name . '.' . $this->extension;
 
-        $this->folder->recursiveForEachParent(function($folder) use (&$path) {
-            $path = $folder->name.'/'.$path;
+        $this->folder->recursiveForEachParent(function ($folder) use (&$path) {
+            $path = $folder->name . '/' . $path;
         });
 
         unset($this->folder);
 
-        return '/'.$path;
+        return '/' . $path;
     }
 
     /**
      * Get the formatted folder size.
      *
-     * @return string   
+     * @return string
      */
     protected function getFormattedSizeAttribute()
     {
@@ -104,7 +112,7 @@ class File extends Model
     /**
      * Get the owner of the folder.
      */
-    public function owned_by()
+    public function ownedBy()
     {
         // return $this->belongsTo(User::class, 'owned_by_id')->publicInfo();
         return $this->belongsTo(User::class, 'owned_by_id');
@@ -113,7 +121,7 @@ class File extends Model
     /**
      * Get the creator of the folder.
      */
-    public function created_by()
+    public function createdBy()
     {
         // return $this->belongsTo(User::class, 'created_by_id')->publicInfo();
         return $this->belongsTo(User::class, 'created_by_id');
@@ -122,7 +130,7 @@ class File extends Model
     /**
      * Get the user who last updated the folder.
      */
-    public function updated_by()
+    public function updatedBy()
     {
         // return $this->belongsTo(User::class, 'updated_by_id')->publicInfo();
         return $this->belongsTo(User::class, 'updated_by_id');
@@ -141,7 +149,7 @@ class File extends Model
 
         $size = $this->size;
 
-        $this->folder->recursiveForEachParent(function($folder) use ($size) {
+        $this->folder->recursiveForEachParent(function ($folder) use ($size) {
             $folder->size -= $size;
             $folder->save();
         });
@@ -173,7 +181,7 @@ class File extends Model
 
         $size = $this->size;
 
-        $this->folder->recursiveForEachParent(function($folder) use ($size) {
+        $this->folder->recursiveForEachParent(function ($folder) use ($size) {
             $folder->size += $size;
             $folder->save();
         });
@@ -185,16 +193,16 @@ class File extends Model
      * @param  \Illuminate\Http\UploadedFile $file
      * @param  \App\Models\Drive\Folder $parent
      * @param  \App\Models\User $user
-     * @return bool 
+     * @return bool
      */
     public function saveToStorage(UploadedFile $uploadedFile, Folder $parent, User $user)
     {
         // Need to create the filename ourselves because Laravel will not always use the correct
         // extension
-        $filename = Str::random(40).'.'.$uploadedFile->getClientOriginalExtension();
+        $filename = Str::random(40) . '.' . $uploadedFile->getClientOriginalExtension();
 
         $date = Carbon::now();
-        $storagePath = $date->format('Y').'/'.$date->format('m').'/'.$date->format('d');
+        $storagePath = $date->format('Y') . '/' . $date->format('m') . '/' . $date->format('d');
 
         // Store file
         $path = Storage::disk('private')
@@ -206,7 +214,7 @@ class File extends Model
         $this->extension = strtolower($pathInfo['extension']);
         $this->storage_filename = $pathInfo['filename'];
         $this->storage_basename = $pathInfo['basename'];
-        $this->storage_path = '/'.$storagePath;
+        $this->storage_path = '/' . $storagePath;
         $this->mime_type = $uploadedFile->getMimeType();
         $this->size = Storage::disk('private')->size($path);
         $this->folder_id = $parent->id;
@@ -231,11 +239,11 @@ class File extends Model
             // Check if a file exists with the same name
             $existingFile = File::where('folder_id', $this->folder_id)
                 ->where('name', $this->name)->first();
-            
+
             if (!$existingFile) {
                 $this->save();
             } else {
-                $this->name = $name.' ('.++$i.')';
+                $this->name = $name . ' (' . ++$i . ')';
 
                 // Do not exceed 1000 copies / failsafe to stop impending doom
                 if ($i > 1000) {
@@ -254,7 +262,7 @@ class File extends Model
 
         $that = $this;
 
-        $this->folder->recursiveForEachParent(function($folder) use ($that) {
+        $this->folder->recursiveForEachParent(function ($folder) use ($that) {
             $folder->size += $that->size;
             $folder->save();
         });
@@ -277,13 +285,13 @@ class File extends Model
 
         $size = $this->size;
 
-        $this->folder->recursiveForEachParent(function($folder) use ($size) {
+        $this->folder->recursiveForEachParent(function ($folder) use ($size) {
             $folder->size -= $size;
             $folder->save();
         });
 
         // Delete the file from storage
-        Storage::disk('private')->delete($this->storage_path.'/'.$this->storage_basename);
+        Storage::disk('private')->delete($this->storage_path . '/' . $this->storage_basename);
 
         $this->forceDelete();
     }

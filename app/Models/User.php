@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\Drive\Folder;
 use App\Models\Drive\Server;
 use App\Traits\HasRoles;
+use App\Traits\HasUuid;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -13,7 +14,14 @@ use Laravel\Passport\HasApiTokens;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
-    use HasRoles, HasApiTokens, Notifiable, SoftDeletes;
+    use HasUuid, HasRoles, HasApiTokens, Notifiable, SoftDeletes;
+
+    /**
+     * Indicates if the IDs are auto-incrementing.
+     *
+     * @var bool
+     */
+    public $incrementing = false;
 
     /**
      * The attributes that should be mutated to dates.
@@ -39,7 +47,7 @@ class User extends Authenticatable implements MustVerifyEmail
      * @var array
      */
     protected $fillable = [
-        'first_name', 'last_name', 'email', 'password', 'allocated_drive_bytes'
+        'first_name', 'last_name', 'email', 'password', 'allocated_drive_bytes',
     ];
 
     /**
@@ -64,7 +72,7 @@ class User extends Authenticatable implements MustVerifyEmail
     /**
      * Get the formatted allocated drive bytes.
      *
-     * @return string   
+     * @return string
      */
     protected function getFormattedAllocatedDriveBytesAttribute()
     {
@@ -74,7 +82,7 @@ class User extends Authenticatable implements MustVerifyEmail
     /**
      * Get the formatted used drive bytes.
      *
-     * @return string   
+     * @return string
      */
     protected function getFormattedUsedDriveBytesAttribute()
     {

@@ -6,12 +6,20 @@ use App\Models\Drive\File;
 use App\Models\Drive\Server;
 use App\Models\User;
 use App\Traits\Drive\HasFolderPath;
+use App\Traits\HasUuid;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Folder extends Model
 {
-    use SoftDeletes, HasFolderPath;
+    use HasUuid, SoftDeletes, HasFolderPath;
+
+    /**
+     * Indicates if the IDs are auto-incrementing.
+     *
+     * @var bool
+     */
+    public $incrementing = false;
 
     /**
      * The table associated with the model
@@ -64,23 +72,23 @@ class Folder extends Model
     /**
      * Get the folder path.
      *
-     * @return string   
+     * @return string
      */
     protected function getPathAttribute()
     {
         $path = $this->name;
 
-        $this->recursiveForEachParent(function($folder) use (&$path) {
-            $path = $folder->name.'/'.$path;
+        $this->recursiveForEachParent(function ($folder) use (&$path) {
+            $path = $folder->name . '/' . $path;
         });
 
-        return '/'.$path;
+        return '/' . $path;
     }
 
     /**
      * Get the formatted folder size.
      *
-     * @return string   
+     * @return string
      */
     protected function getFormattedSizeAttribute()
     {
@@ -106,7 +114,7 @@ class Folder extends Model
     /**
      * Get the owner of the folder.
      */
-    public function owned_by()
+    public function ownedBy()
     {
         // return $this->belongsTo(User::class, 'owned_by_id')->publicInfo();
         return $this->belongsTo(User::class, 'owned_by_id');
@@ -115,7 +123,7 @@ class Folder extends Model
     /**
      * Get the creator of the folder.
      */
-    public function created_by()
+    public function createdBy()
     {
         // return $this->belongsTo(User::class, 'created_by_id')->publicInfo();
         return $this->belongsTo(User::class, 'created_by_id');
@@ -124,7 +132,7 @@ class Folder extends Model
     /**
      * Get the user who last updated the folder.
      */
-    public function updated_by()
+    public function updatedBy()
     {
         // return $this->belongsTo(User::class, 'updated_by_id')->publicInfo();
         return $this->belongsTo(User::class, 'updated_by_id');
@@ -148,7 +156,7 @@ class Folder extends Model
         // Update current parent folder sizes
         $size = $this->size;
 
-        $this->recursiveForEachParent(function($folder) use ($size) {
+        $this->recursiveForEachParent(function ($folder) use ($size) {
             $folder->size -= $size;
             $folder->save();
         });
@@ -164,7 +172,7 @@ class Folder extends Model
             $this->save();
 
             // Update this folder's child folder's and file's owner
-            $this->recursiveForEachChild(function($childFolder) use ($folder) {
+            $this->recursiveForEachChild(function ($childFolder) use ($folder) {
                 $childFolder->owned_by_id = $folder->owned_by_id;
                 $childFolder->save();
 
@@ -186,8 +194,8 @@ class Folder extends Model
 
         // Update all new parents' folder sizes
         $this->load('folder');
-    
-        $this->recursiveForEachParent(function($folder) use ($size) {
+
+        $this->recursiveForEachParent(function ($folder) use ($size) {
             $folder->size += $size;
             $folder->save();
         });
@@ -201,8 +209,8 @@ class Folder extends Model
     public function packageZip()
     {
         $zip = new \ZipArchive;
-        $filename = 'temp'.time().'.zip';
-        $zipPath = config('filesystems.disks.tmp.root').'/'.$filename;
+        $filename = 'temp' . time() . '.zip';
+        $zipPath = config('filesystems.disks.tmp.root') . '/' . $filename;
 
         if ($zip->open($zipPath, \ZipArchive::CREATE) !== true) {
             abort(500, 'Failed to open zip file.');
@@ -210,17 +218,17 @@ class Folder extends Model
 
         foreach ($this->files as $file) {
             $zip->addFile(
-                storage_path('app/private'.$file->storage_path.'/'.$file->storage_basename),
+                storage_path('app/private' . $file->storage_path . '/' . $file->storage_basename),
                 $file->getRelativePath(0, false)
             );
         }
 
-        $this->recursiveForEachChild(function($folder, $depth) use (&$zip) {
+        $this->recursiveForEachChild(function ($folder, $depth) use (&$zip) {
             $zip->addEmptyDir($folder->getRelativePath($depth - 1, false));
 
             foreach ($folder->files as $file) {
                 $zip->addFile(
-                    storage_path('app/private'.$file->storage_path.'/'.$file->storage_basename),
+                    storage_path('app/private' . $file->storage_path . '/' . $file->storage_basename),
                     $file->getRelativePath($depth, false)
                 );
             }
@@ -278,7 +286,7 @@ class Folder extends Model
         $size = $this->size;
 
         // Update the parent folder's sizes
-        $this->recursiveForEachParent(function($folder) use ($size) {
+        $this->recursiveForEachParent(function ($folder) use ($size) {
             $folder->size -= $size;
             $folder->save();
         });
@@ -289,7 +297,7 @@ class Folder extends Model
         }
 
         // Recursively delete all child folders
-        $this->recursiveForEachChild(function($folder) {
+        $this->recursiveForEachChild(function ($folder) {
             foreach ($folder->files as $file) {
                 $folder->permanentDelete();
             }
