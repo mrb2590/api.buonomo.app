@@ -89,9 +89,9 @@ class FileController extends Controller
         $newUserDriveBytes = $parentFolder->owned_by->used_drive_bytes;
         $newUserDriveBytes += $request->file('file')->getClientSize();
 
-        // Make sure owner has ednough allocated storage
+        // Make sure owner has enough allocated storage
         if ($newUserDriveBytes > $parentFolder->owned_by->allocated_drive_bytes) {
-            abort(403, 'The new owner does not have enough drive storage.');
+            abort(403, 'You do not have enough drive storage.');
         }
 
         $file = new File;

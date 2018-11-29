@@ -247,14 +247,14 @@ class File extends Model
         $this->owned_by->used_drive_bytes = $newUserDriveBytes;
         $this->owned_by->save();
 
-        // Update the parent folders' storagee
+        // Update the parent folder's size
         $this->folder->size += $this->size;
         $this->folder->save();
 
-        $that = $this;
+        $size = $this->size;
 
-        $this->folder->recursiveForEachParent(function ($folder) use ($that) {
-            $folder->size += $that->size;
+        $this->folder->recursiveForEachParent(function ($folder) use ($size) {
+            $folder->size += $size;
             $folder->save();
         });
 
@@ -266,17 +266,16 @@ class File extends Model
      */
     public function permanentDelete()
     {
+        $size = $this->size;
+
         // Update file owner's used drive bytes
-        $ownedBy = $this->owned_by()->withTrashed()->first();
-        $ownedBy->used_drive_bytes -= $this->size;
-        $ownedBy->save();
+        $this->owned_by->used_drive_bytes -= $size;
+        $this->owned_by->save();
 
         // Update parent folders sizes
         $folder = $this->folder()->withTrashed()->first();
-        $folder->size -= $this->size;
+        $folder->size -= $size;
         $folder->save();
-
-        $size = $this->size;
 
         $folder->recursiveForEachParent(function ($folder) use ($size) {
             $folder->size -= $size;

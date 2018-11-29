@@ -275,6 +275,32 @@ class Folder extends Model
     }
 
     /**
+     * Calculate and update the size of the folder.
+     * This should be used only to fix any cached file sizes.
+     */
+    public function recalculateSize()
+    {
+        $this->timestamps = false; // Since this is a fix, do not update the timestamps
+        $size = 0;
+
+        foreach ($this->files as $file) {
+            $size += $file->size;
+        }
+
+        // Recursively get the size of every file within this folder
+        $this->recursiveForEachChild(function ($folder) use (&$size) {
+            foreach ($folder->files as $file) {
+                $size += $file->size;
+            }
+        });
+
+        $this->size = $size;
+        $this->save();
+
+        $this->timestamps = true; // Set back incase this object is used later
+    }
+
+    /**
      * Recursively trash the folder.
      */
     public function trash()
@@ -286,7 +312,7 @@ class Folder extends Model
 
         // Recursively delete all child folders
         $this->recursiveForEachChild(function ($folder) {
-            $folder->delete();
+            $folder->trash();
         });
 
         $this->delete();

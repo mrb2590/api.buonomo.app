@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\Drive\Folder;
 use App\Models\User;
 use Carbon\Carbon;
 use Faker\Factory as Faker;
@@ -27,7 +26,7 @@ class DatabaseSeeder extends Seeder
         $user->slug = str_slug(explode('@', $email)[0], '-');
         $user->password = bcrypt('apples');
         $user->email_verified_at = Carbon::now();
-        $user->allocated_drive_bytes = 100000000;
+        $user->allocated_drive_bytes = 107374182400; // 100 GB
 
         $user->save();
 
@@ -38,7 +37,7 @@ class DatabaseSeeder extends Seeder
         $user->createRootFolder();
 
         // Create 50 random users
-        factory(User::class, 50)->create()->each(function($user) use ($faker) {
+        factory(User::class, 50)->create()->each(function ($user) use ($faker) {
             // $user->assignRole($faker->randomElement(['administrator', 'member']));
             $user->createRootFolder();
         });
