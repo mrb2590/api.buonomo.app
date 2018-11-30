@@ -90,6 +90,58 @@ class Folder extends Model
     }
 
     /**
+     * Get the folder path.
+     *
+     * @return string
+     */
+    protected function getfilesCountAttribute()
+    {
+        return $total = $this->files()->count();
+    }
+
+    /**
+     * Get the folder path.
+     *
+     * @return string
+     */
+    protected function getfoldersCountAttribute()
+    {
+        return $total = $this->folders()->count();
+    }
+
+    /**
+     * Get the total number of files .
+     *
+     * @return string
+     */
+    protected function getTotalFilesCountAttribute()
+    {
+        $total = $this->filesCount;
+
+        $this->recursiveForEachChild(function ($folder) use (&$total) {
+            $total += $folder->filesCount;
+        });
+
+        return $total;
+    }
+
+    /**
+     * Get the total number of folders .
+     *
+     * @return string
+     */
+    protected function getTotalFoldersCountAttribute()
+    {
+        $total = $this->foldersCount;
+
+        $this->recursiveForEachChild(function ($folder) use (&$total) {
+            $total += $folder->foldersCount;
+        });
+
+        return $total;
+    }
+
+    /**
      * Get the parent folder.
      */
     public function folder()
@@ -263,7 +315,7 @@ class Folder extends Model
      */
     public function recursiveForEachChild(\Closure $callback, $withTrashed = false, $depth = 1)
     {
-        $folders = $withTrashed ? $this->folders()->withTrashed()->get() : $this->folders;
+        $folders = $withTrashed ? $this->folders()->withTrashed()->get() : $this->folders()->get();
 
         foreach ($folders as $folder) {
             $currentFolderDepth = $depth;

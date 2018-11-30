@@ -33,6 +33,10 @@ class Folder extends JsonResource
             'folder' => new FolderResource($this->whenLoaded('folder')),
             'folders' => FolderResource::collection($this->whenLoaded('folders')),
             'files' => FileResource::collection($this->whenLoaded('files')),
+            'files_count' => $this->filesCount,
+            'folders_count' => $this->foldersCount,
+            'total_files' => $this->totalFilesCount,
+            'total_folders' => $this->totalFoldersCount,
         ];
     }
 }
