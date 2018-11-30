@@ -13,10 +13,10 @@ class Server
     public static function formatBytes($sizeInBytes)
     {
         $decimals = '2';
-        $size = ['B','KB','MB','GB','TB','PB','EB','ZB','YB'];
+        $size = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
         $factor = floor((strlen($sizeInBytes) - 1) / 3);
-        $sizeReadable = sprintf("%.2f", $sizeInBytes / pow(1024, $factor));
-        $sizeReadable .= ' '.@$size[$factor];
+        $sizeReadable = (float) sprintf("%.2f", $sizeInBytes / pow(1024, $factor));
+        $sizeReadable .= ' ' . @$size[$factor];
 
         return $sizeReadable;
     }
@@ -48,7 +48,7 @@ class Server
 
         return [
             'bytes' => $totalSpace,
-            'formatted' => self::formatBytes($totalSpace)
+            'formatted' => self::formatBytes($totalSpace),
         ];
     }
 
@@ -63,7 +63,7 @@ class Server
 
         return [
             'bytes' => $freeSpace,
-            'formatted' => self::formatBytes($freeSpace)
+            'formatted' => self::formatBytes($freeSpace),
         ];
     }
 
@@ -78,7 +78,7 @@ class Server
 
         return [
             'bytes' => $usedSpace,
-            'formatted' => self::formatBytes($usedSpace)
+            'formatted' => self::formatBytes($usedSpace),
         ];
     }
 }
