@@ -11,11 +11,12 @@ return [
     | to accept any value.
     |
     */
-   
+
     'supportsCredentials' => false,
     'allowedOrigins' => [
         'https://buonomo.app',
         'https://dev.buonomo.app',
+        'https://dev2.buonomo.app',
     ],
     'allowedOriginsPatterns' => [],
     'allowedHeaders' => ['*'],

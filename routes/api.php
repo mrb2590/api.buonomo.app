@@ -1,7 +1,5 @@
 <?php
 
-use Illuminate\Http\Request;
-
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -11,10 +9,15 @@ use Illuminate\Http\Request;
 | routes are loaded by the RouteServiceProvider within a group which
 | is assigned the "api" middleware group. Enjoy building your API!
 |
-*/
+ */
 
 // Routes require authentication
-Route::middleware(['auth:api', 'verified'])->prefix('v1')->group(function() {
+Route::prefix('v1')->group(function () {
+
+    /* Oauth Proxy */
+
+    // Fetch access token
+    Route::post('/oauth/proxy/token', 'Auth\LoginController@fetchToken')->name('oauth.proxy.token');
 
     /* Users */
 
@@ -140,5 +143,24 @@ Route::middleware(['auth:api', 'verified'])->prefix('v1')->group(function() {
     // Restore a trashed file
     Route::post('/drive/files/{trashedFile}/restore', 'Drive\FileController@restore')
         ->name('drive.files.restore');
+
+    /* Surveillance */
+
+    // Stream the camera feed
+    Route::get('/surveillance/cameras/{camera}', 'Surveillance\CameraController@streamFeed');
+
+    // Run lights program
+    Route::post(
+        '/surveillance/webhook/motion-detected',
+        'Surveillance\CameraController@motionWebhook'
+    );
+
+    /* RaspberryPi */
+
+    // Run lights program webhook for Google Assistant app
+    Route::post(
+        '/google/raspberrypi-controller/webhook',
+        'RaspberryPi\LightController@runLightsProgramWebhook'
+    );
 
 });

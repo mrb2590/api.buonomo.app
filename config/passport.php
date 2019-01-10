@@ -17,4 +17,20 @@ return [
 
     'public_key' => env('PASSPORT_PUBLIC_KEY'),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Front-end Clients
+    |--------------------------------------------------------------------------
+    |
+    | Any front-end clients that we want to store the id and secrets for in
+    | order to proxy their token requests. (Do not want to store client secret
+    | in the Javascript application.
+    |
+    */
+
+    'password_client' => [
+        'id' => env('PASSWORD_CLIENT_ID'),
+        'secret' => env('PASSWORD_CLIENT_SECRET'),
+    ],
+
 ];
