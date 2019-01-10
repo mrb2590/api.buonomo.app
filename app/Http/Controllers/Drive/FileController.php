@@ -20,7 +20,7 @@ class FileController extends Controller
      */
     public function __construct()
     {
-        //
+        $this->middleware(['auth:api', 'verified']);
     }
 
     /**
@@ -181,8 +181,8 @@ class FileController extends Controller
         }
 
         return response()->download(
-            storage_path('app/private' . $file->storage_path . '/' . $file->storage_basename),
-            $file->name . '.' . $file->extension
+            storage_path('app/private'.$file->storage_path.'/'.$file->storage_basename),
+            $file->name.'.'.$file->extension
         );
     }
 

@@ -19,7 +19,7 @@ class FolderController extends Controller
      */
     public function __construct()
     {
-        //
+        $this->middleware(['auth:api', 'verified']);
     }
 
     /**
@@ -166,7 +166,7 @@ class FolderController extends Controller
         try {
             $folder->save();
         } catch (\Illuminate\Database\QueryException $e) {
-            abort(409, 'A folder with the name "' . $folder->name . '" already exists.');
+            abort(409, 'A folder with the name "'.$folder->name.'" already exists.');
         }
 
         return new FolderResource($folder);
@@ -261,7 +261,7 @@ class FolderController extends Controller
 
         $zipPath = $folder->packageZip();
 
-        return response()->download($zipPath, $folder->name . '.zip')->deleteFileAfterSend(true);
+        return response()->download($zipPath, $folder->name.'.zip')->deleteFileAfterSend(true);
     }
 
     /**
