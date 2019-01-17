@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Traits\HasPaging;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
@@ -50,9 +51,32 @@ class UserController extends Controller
             return new UserResource($user);
         }
 
-        $limit = $this->validatePaging($request);
+        $searchableCols = ['first_name', 'last_name', 'email', 'slug'];
+        $sortableCols = array_merge($searchableCols, [
+            'verified_at',
+            'created_at',
+            'allocated_drive_bytes',
+            'used_drive_bytes',
+            'email_verified_at',
+        ]);
+        $limit = $this->validatePaging($request, $sortableCols);
+        $query = User::query();
 
-        return UserResource::collection(User::paginate($limit));
+        if ($request->has('search')) {
+            for ($i = 0; $i < count($searchableCols); $i++) {
+                if ($i === 0) {
+                    $query->where($searchableCols[$i], 'like', '%'.$request->input('search').'%');
+                } else {
+                    $query->orWhere($searchableCols[$i], 'like', '%'.$request->input('search').'%');
+                }
+            }
+        }
+
+        if ($request->has('sort')) {
+            $query->orderBy($request->input('sortby'), $request->input('sort'));
+        }
+
+        return UserResource::collection($query->paginate($limit));
     }
 
     /**
@@ -107,8 +131,10 @@ class UserController extends Controller
             'first_name' => 'nullable|string|max:255',
             'last_name' => 'nullable|string|max:255',
             'email' => 'nullable|email|max:255|unique:users',
-            'password' => 'nullable|string|min:6',
-            'verified' => 'required|boolean',
+            'current_password' => 'required_with:password,password_confirmation|string',
+            'password' => 'required_with:current_password,password_confirmation|string|confirmed',
+            'password_confirmation' => 'required_with:current_password,password|string|min:6',
+            'verified' => 'nullable|boolean',
             'allocated_drive_bytes' => 'nullable|integer|min:0',
         ]);
 
@@ -129,6 +155,10 @@ class UserController extends Controller
         $data = $request->all();
 
         if ($request->has('password')) {
+            if (!Hash::check($data['current_password'], $request->user()->password)) {
+                abort(401, 'Current password does not match.');
+            }
+
             $data['password'] = bcrypt($data['password']);
         }
 

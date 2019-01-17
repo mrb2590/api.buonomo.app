@@ -27,8 +27,10 @@ class User extends JsonResource
             'formatted_allocated_drive_bytes' => $this->formatted_allocated_drive_bytes,
             'used_drive_bytes' => $this->used_drive_bytes,
             'formatted_used_drive_bytes' => $this->formatted_used_drive_bytes,
-            'email_verified_at' => !$this->email_verified_at ?: $this->email_verified_at->timestamp,
-            'deleted_at' => !$this->deleted_at ?: $this->deleted_at->timestamp,
+            'email_verified_at' => !$this->email_verified_at
+                ? null
+                : $this->email_verified_at->timestamp,
+            'deleted_at' => !$this->deleted_at ? null : $this->deleted_at->timestamp,
             'created_at' => $this->created_at->timestamp,
             'updated_at' => $this->updated_at->timestamp,
             'folder' => new FolderResource($this->whenLoaded('folder')),
