@@ -12,7 +12,7 @@ trait HasPaging
      * @param  \Illuminate\Http\Request $request
      * @return integer $limit
      */
-    protected function validatePaging(Request $request, $sortableCols = [])
+    protected function validatePaging(Request $request, $model = null, $sortableCols = [])
     {
         // Default limit
         $limit = 10;
@@ -20,13 +20,17 @@ trait HasPaging
         if ($request->has('limit')) {
             $this->validate($request, [
                 'page' => 'nullable|integer',
-                'limit' => 'nullable|integer|in:5,10,25,50,100',
+                'limit' => 'nullable|integer|in:-1,5,10,25,50,100',
                 'sort' => 'required_with:sort_col|string|in:asc,desc',
                 'sortby' => 'required_with:sort|string|in:'.implode(',', $sortableCols),
                 'search' => 'nullable|string',
             ]);
 
             $limit = (int) $request->query('limit');
+
+            if ($limit === -1) {
+                $limit = $model ? $model::count() : 5;
+            }
         }
 
         return $limit;

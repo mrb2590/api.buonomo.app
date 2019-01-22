@@ -31,7 +31,17 @@ class UserController extends Controller
      */
     public function fetchCurrent(Request $request)
     {
-        return new UserResource($request->user());
+        $this->validate($request, [
+            'with_roles' => 'nullable|boolean',
+        ]);
+
+        $user = $request->user();
+
+        if ((bool) $request->input('with_roles')) {
+            $user->load('roles');
+        }
+
+        return new UserResource($user);
     }
 
     /**
@@ -59,7 +69,7 @@ class UserController extends Controller
             'used_drive_bytes',
             'email_verified_at',
         ]);
-        $limit = $this->validatePaging($request, $sortableCols);
+        $limit = $this->validatePaging($request, User::class, $sortableCols);
         $query = User::query();
 
         if ($request->has('search')) {

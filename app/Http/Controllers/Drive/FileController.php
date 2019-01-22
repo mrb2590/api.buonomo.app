@@ -44,7 +44,7 @@ class FileController extends Controller
 
         $this->validate($request, ['owned_by_id' => 'nullable|uuid|exists:users,id']);
 
-        $limit = $this->validatePaging($request);
+        $limit = $this->validatePaging($request, File::class);
 
         if ($request->has('owned_by_id')) {
             if ($request->user()->id !== (int) $request->input('owned_by_id') &&

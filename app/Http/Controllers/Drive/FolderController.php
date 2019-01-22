@@ -54,7 +54,7 @@ class FolderController extends Controller
 
         $this->validate($request, ['owned_by_id' => 'nullable|uuid|exists:users,id']);
 
-        $limit = $this->validatePaging($request);
+        $limit = $this->validatePaging($request, Folder::class);
 
         if ($request->has('owned_by_id')) {
             if ($request->user()->id !== (int) $request->input('owned_by_id') &&
@@ -90,7 +90,7 @@ class FolderController extends Controller
             abort(403, 'You\'re not authorized to fetch folders from folders you don\'t own.');
         }
 
-        $limit = $this->validatePaging($request);
+        $limit = $this->validatePaging($request, Folder::class);
 
         return FolderResource::collection($folder->folders()->paginate($limit));
     }
@@ -110,7 +110,7 @@ class FolderController extends Controller
             abort(403, 'You\'re not authorized to fetch files from folders you don\'t own.');
         }
 
-        $limit = $this->validatePaging($request);
+        $limit = $this->validatePaging($request, Folder::class);
 
         return FolderResource::collection($folder->files()->paginate($limit));
     }
