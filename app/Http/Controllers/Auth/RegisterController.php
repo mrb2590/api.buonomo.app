@@ -78,6 +78,7 @@ class RegisterController extends Controller
         // $user->assignRole('member');
 
         $user->createRootFolder();
+        $user->createRandomAvatar();
 
         return $user;
     }
