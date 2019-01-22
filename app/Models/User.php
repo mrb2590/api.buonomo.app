@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Avatar;
 use App\Models\Drive\Folder;
 use App\Models\Drive\Server;
 use App\Traits\HasRoles;
@@ -108,6 +109,14 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Get the user's avatar.
+     */
+    public function avatar()
+    {
+        return $this->hasOne(Avatar::class);
+    }
+
+    /**
      * Create the root folder for the user if it does not exist.
      */
     public function createRootFolder()
@@ -130,5 +139,25 @@ class User extends Authenticatable implements MustVerifyEmail
         $this->save();
 
         return $folder;
+    }
+
+    /**
+     * Create a random avatar for this user.
+     */
+    public function createRandomAvatar()
+    {
+        // Return the avatar if it already exists
+        if ($this->avatar) {
+            return $this->avatar;
+        }
+
+        $this->avatar = new Avatar;
+        $this->avatar->user_id = $this->id;
+        Avatar::reguard(); // Make sure the guard is on if we are seeding
+        $this->avatar->fill(Avatar::random()->toArray());
+
+        $this->avatar->save();
+
+        return $this->avatar;
     }
 }

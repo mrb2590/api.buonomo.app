@@ -56,6 +56,17 @@ Route::prefix('v1')->group(function () {
     // Remove a user's role
     Route::delete('/users/{user}/roles', 'UserRoleController@remove')->name('users.roles.remove');
 
+    /* Avatars */
+
+    // Fetch the current user's avatar
+    Route::get('/user/avatar', 'AvatarController@fetchCurrent')->name('user.avatar.fetch');
+
+    // Create an avatar
+    Route::post('/avatar', 'AvatarController@store')->name('avatar.create');
+
+    // Fetch avatar options
+    Route::get('/avatar/options', 'AvatarController@fetchOptions')->name('avatar.options.fetch');
+
     /* Drive Server */
 
     // Fetch server data

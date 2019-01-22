@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Http\Resources\Avatar as AvatarResource;
 use App\Http\Resources\Drive\Folder as FolderResource;
 use App\Http\Resources\Role as RoleResource;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -35,6 +36,7 @@ class User extends JsonResource
             'updated_at' => $this->updated_at->timestamp,
             'folder' => new FolderResource($this->whenLoaded('folder')),
             'roles' => RoleResource::collection($this->whenLoaded('roles')),
+            'avatar' => new AvatarResource($this->whenLoaded('avatar')),
         ];
     }
 }

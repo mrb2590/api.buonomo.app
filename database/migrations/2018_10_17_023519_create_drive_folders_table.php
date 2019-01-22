@@ -19,8 +19,8 @@ class CreateDriveFoldersTable extends Migration
             $table->uuid('folder_id')->nullable();
             $table->bigInteger('size')->unsigned()->default(0);
             $table->uuid('owned_by_id');
-            $table->uuid('created_by_id');
-            $table->uuid('updated_by_id');
+            $table->uuid('created_by_id')->nullable();
+            $table->uuid('updated_by_id')->nullable();
             $table->softDeletes();
             $table->timestamps();
 
@@ -41,13 +41,13 @@ class CreateDriveFoldersTable extends Migration
             $table->foreign('created_by_id')
                 ->references('id')
                 ->on('users')
-                ->onDelete('no action')
+                ->onDelete('set null')
                 ->onUpdate('cascade');
 
             $table->foreign('updated_by_id')
                 ->references('id')
                 ->on('users')
-                ->onDelete('no action')
+                ->onDelete('set null')
                 ->onUpdate('cascade');
 
             $table->unique(['name', 'folder_id', 'owned_by_id']);

@@ -24,8 +24,8 @@ class CreateDriveFilesTable extends Migration
             $table->bigInteger('size')->unsigned();
             $table->uuid('folder_id');
             $table->uuid('owned_by_id');
-            $table->uuid('created_by_id');
-            $table->uuid('updated_by_id');
+            $table->uuid('created_by_id')->nullable();
+            $table->uuid('updated_by_id')->nullable();
             $table->softDeletes();
             $table->timestamps();
 
@@ -46,13 +46,13 @@ class CreateDriveFilesTable extends Migration
             $table->foreign('created_by_id')
                 ->references('id')
                 ->on('users')
-                ->onDelete('no action')
+                ->onDelete('set null')
                 ->onUpdate('cascade');
 
             $table->foreign('updated_by_id')
                 ->references('id')
                 ->on('users')
-                ->onDelete('no action')
+                ->onDelete('set null')
                 ->onUpdate('cascade');
 
             $table->unique(['name', 'folder_id']);

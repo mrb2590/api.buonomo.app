@@ -33,15 +33,20 @@ class UserController extends Controller
     {
         $this->validate($request, [
             'with_roles' => 'nullable|boolean',
+            'with_avatar' => 'nullable|boolean',
         ]);
 
-        $user = $request->user();
+        $load = [];
 
         if ((bool) $request->input('with_roles')) {
-            $user->load('roles');
+            array_push($load, 'roles');
         }
 
-        return new UserResource($user);
+        if ((bool) $request->input('with_avatar')) {
+            array_push($load, 'avatar');
+        }
+
+        return new UserResource($request->user()->load($load));
     }
 
     /**
@@ -57,8 +62,23 @@ class UserController extends Controller
             abort(403, 'You are not authorized to fetch users.');
         }
 
+        $this->validate($request, [
+            'with_roles' => 'nullable|boolean',
+            'with_avatar' => 'nullable|boolean',
+        ]);
+
+        $load = [];
+
+        if ((bool) $request->input('with_roles')) {
+            array_push($load, 'roles');
+        }
+
+        if ((bool) $request->input('with_avatar')) {
+            array_push($load, 'avatar');
+        }
+
         if ($user) {
-            return new UserResource($user);
+            return new UserResource($user->load($load));
         }
 
         $searchableCols = ['first_name', 'last_name', 'email', 'slug'];
@@ -70,7 +90,7 @@ class UserController extends Controller
             'email_verified_at',
         ]);
         $limit = $this->validatePaging($request, User::class, $sortableCols);
-        $query = User::query();
+        $query = User::query()->with($load);
 
         if ($request->has('search')) {
             for ($i = 0; $i < count($searchableCols); $i++) {
