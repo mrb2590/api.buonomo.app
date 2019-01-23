@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\Avatar as AvatarResource;
 use App\Models\Avatar;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class AvatarController extends Controller
@@ -92,5 +93,50 @@ class AvatarController extends Controller
         $avatar->save();
 
         return new AvatarResource($avatar);
+    }
+
+    /**
+     * Update an avatar.
+     *
+     * @param  \Illuminate\Http\Request $request
+     * @param  \App\Models\User $user
+     * @return \Illuminate\Http\Response
+     */
+    public function update(Request $request, User $user)
+    {
+        $this->validate($request, [
+            'style' => 'required|string|in:'.implode(',', Avatar::$styles),
+            'accessories' => 'required|string|in:'.implode(',', Avatar::$accessories),
+            'clothes_type' => 'required|string|in:'.implode(',', Avatar::$clothesTypes),
+            'eyebrow_type' => 'required|string|in:'.implode(',', Avatar::$eyebrowTypes),
+            'eye_type' => 'required|string|in:'.implode(',', Avatar::$eyeTypes),
+            'facial_hair_type' => 'required|string|in:'.implode(',', Avatar::$facialHairTypes),
+            'facial_hair_color' => 'required|string|in:'.implode(',', Avatar::$facialHairColors),
+            'hair_color' => 'required|string|in:'.implode(',', Avatar::$hairColors),
+            'mouth_type' => 'required|string|in:'.implode(',', Avatar::$mouthTypes),
+            'skin_color' => 'required|string|in:'.implode(',', Avatar::$skinColors),
+            'top_type' => 'required|string|in:'.implode(',', Avatar::$topTypes),
+        ]);
+
+        if ($request->user()->isNot($user) && $request->user()->cannot('update_users')) {
+            abort(403, 'You are not authorized to update other users\'s avatars.');
+        }
+
+        $user->avatar->user_id = $request->user()->id;
+        $user->avatar->style = $request->input('style');
+        $user->avatar->accessories = $request->input('accessories');
+        $user->avatar->clothes_type = $request->input('clothes_type');
+        $user->avatar->eyebrow_type = $request->input('eyebrow_type');
+        $user->avatar->eye_type = $request->input('eye_type');
+        $user->avatar->facial_hair_type = $request->input('facial_hair_type');
+        $user->avatar->facial_hair_color = $request->input('facial_hair_color');
+        $user->avatar->hair_color = $request->input('hair_color');
+        $user->avatar->mouth_type = $request->input('mouth_type');
+        $user->avatar->skin_color = $request->input('skin_color');
+        $user->avatar->top_type = $request->input('top_type');
+
+        $user->avatar->save();
+
+        return new AvatarResource($user->avatar);
     }
 }

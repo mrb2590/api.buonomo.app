@@ -62,10 +62,14 @@ Route::prefix('v1')->group(function () {
     Route::get('/user/avatar', 'AvatarController@fetchCurrent')->name('user.avatar.fetch');
 
     // Create an avatar
-    Route::post('/avatar', 'AvatarController@store')->name('avatar.create');
+    Route::post('/avatars', 'AvatarController@store')->name('avatar.create');
 
     // Fetch avatar options
-    Route::get('/avatar/options', 'AvatarController@fetchOptions')->name('avatar.options.fetch');
+    Route::get('/avatars/options', 'AvatarController@fetchOptions')->name('avatar.options.fetch');
+
+    // Update an  avatar
+    Route::patch('/users/{user}/avatar', 'AvatarController@update')
+        ->name('users.avatar.update');
 
     /* Drive Server */
 
