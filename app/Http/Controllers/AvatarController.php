@@ -39,9 +39,11 @@ class AvatarController extends Controller
     public function fetchOptions(Request $request)
     {
         return [
-            'styles' => Avatar::$styles,
-            'accessories' => Avatar::$accessories,
-            'clothesTypes' => Avatar::$clothesTypes,
+            'avatarStyles' => Avatar::$avatarStyles,
+            'accessoriesTypes' => Avatar::$accessoriesTypes,
+            'clotheTypes' => Avatar::$clotheTypes,
+            'clotheColors' => Avatar::$clotheColors,
+            'graphicTypes' => Avatar::$graphicTypes,
             'eyebrowTypes' => Avatar::$eyebrowTypes,
             'eyeTypes' => Avatar::$eyeTypes,
             'facialHairTypes' => Avatar::$facialHairTypes,
@@ -62,9 +64,11 @@ class AvatarController extends Controller
     public function store(Request $request)
     {
         $this->validate($request, [
-            'style' => 'required|string|in:'.implode(',', Avatar::$styles),
-            'accessories' => 'required|string|in:'.implode(',', Avatar::$accessories),
-            'clothes_type' => 'required|string|in:'.implode(',', Avatar::$clothesTypes),
+            'avatar_style' => 'required|string|in:'.implode(',', Avatar::$avatarStyles),
+            'accessories_type' => 'required|string|in:'.implode(',', Avatar::$accessoriesTypes),
+            'clothe_type' => 'required|string|in:'.implode(',', Avatar::$clotheTypes),
+            'clothe_color' => 'required|string|in:'.implode(',', Avatar::$clotheColors),
+            'graphic_type' => 'required|string|in:'.implode(',', Avatar::$graphicTypes),
             'eyebrow_type' => 'required|string|in:'.implode(',', Avatar::$eyebrowTypes),
             'eye_type' => 'required|string|in:'.implode(',', Avatar::$eyeTypes),
             'facial_hair_type' => 'required|string|in:'.implode(',', Avatar::$facialHairTypes),
@@ -78,9 +82,11 @@ class AvatarController extends Controller
         $avatar = new Avatar;
 
         $avatar->user_id = $request->user()->id;
-        $avatar->style = $request->input('style');
-        $avatar->accessories = $request->input('accessories');
-        $avatar->clothes_type = $request->input('clothes_type');
+        $avatar->avatar_style = $request->input('avatar_style');
+        $avatar->accessories_type = $request->input('accessories_type');
+        $avatar->clothe_type = $request->input('clothe_type');
+        $avatar->clothe_color = $request->input('clothe_color');
+        $avatar->graphic_type = $request->input('graphic_type');
         $avatar->eyebrow_type = $request->input('eyebrow_type');
         $avatar->eye_type = $request->input('eye_type');
         $avatar->facial_hair_type = $request->input('facial_hair_type');
@@ -105,9 +111,11 @@ class AvatarController extends Controller
     public function update(Request $request, User $user)
     {
         $this->validate($request, [
-            'style' => 'required|string|in:'.implode(',', Avatar::$styles),
-            'accessories' => 'required|string|in:'.implode(',', Avatar::$accessories),
-            'clothes_type' => 'required|string|in:'.implode(',', Avatar::$clothesTypes),
+            'avatar_style' => 'required|string|in:'.implode(',', Avatar::$avatarStyles),
+            'accessories_type' => 'required|string|in:'.implode(',', Avatar::$accessoriesTypes),
+            'clothe_type' => 'required|string|in:'.implode(',', Avatar::$clotheTypes),
+            'clothe_color' => 'required|string|in:'.implode(',', Avatar::$clotheColors),
+            'graphic_type' => 'required|string|in:'.implode(',', Avatar::$graphicTypes),
             'eyebrow_type' => 'required|string|in:'.implode(',', Avatar::$eyebrowTypes),
             'eye_type' => 'required|string|in:'.implode(',', Avatar::$eyeTypes),
             'facial_hair_type' => 'required|string|in:'.implode(',', Avatar::$facialHairTypes),
@@ -123,9 +131,11 @@ class AvatarController extends Controller
         }
 
         $user->avatar->user_id = $request->user()->id;
-        $user->avatar->style = $request->input('style');
-        $user->avatar->accessories = $request->input('accessories');
-        $user->avatar->clothes_type = $request->input('clothes_type');
+        $user->avatar->avatar_style = $request->input('avatar_style');
+        $user->avatar->accessories_type = $request->input('accessories_type');
+        $user->avatar->clothe_type = $request->input('clothe_type');
+        $user->avatar->clothe_color = $request->input('clothe_color');
+        $user->avatar->graphic_type = $request->input('graphic_type');
         $user->avatar->eyebrow_type = $request->input('eyebrow_type');
         $user->avatar->eye_type = $request->input('eye_type');
         $user->avatar->facial_hair_type = $request->input('facial_hair_type');
