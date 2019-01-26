@@ -30,8 +30,16 @@ Route::prefix('v1')->group(function () {
     // Create a user
     Route::post('/users', 'UserController@store')->name('users.create');
 
-    // Update a user
-    Route::patch('/users/{user}', 'UserController@update')->name('users.update');
+    // Update a user's profile
+    Route::patch('/users/{user}/profile', 'UserController@updateProfile')
+        ->name('users.profile.update');
+
+    // Update a user's email
+    Route::patch('/users/{user}/email', 'UserController@updateEmail')->name('users.email.update');
+
+    // Update a user's password
+    Route::patch('/users/{user}/password', 'UserController@updatePassword')
+        ->name('users.password.update');
 
     // Trash a user
     Route::delete('/users/{user}/trash', 'UserController@trash')->name('users.trash');

@@ -131,7 +131,6 @@ class UserController extends Controller
         }
 
         $user = new User;
-
         $user->first_name = $request->input('first_name');
         $user->last_name = $request->input('last_name');
         $user->email = $request->input('email');
@@ -139,7 +138,6 @@ class UserController extends Controller
         $user->password = bcrypt($request->input('password'));
         $user->email_verified_at = $request->input('verified') ? Carbon::now() : null;
         $user->allocated_drive_bytes = $request->input('allocated_drive_bytes');
-
         $user->save();
 
         // Create user's root folder
@@ -201,6 +199,111 @@ class UserController extends Controller
         }
 
         $user->fill($data)->save();
+
+        return new UserResource($user);
+    }
+
+    /**
+     * Update a user's profile.
+     *
+     * @param  \Illuminate\Http\Request $request
+     * @param  \App\Models\User $user
+     * @return \Illuminate\Http\Response
+     */
+    public function updateProfile(Request $request, User $user)
+    {
+        $this->validate($request, [
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'verified' => 'nullable|boolean',
+            'allocated_drive_bytes' => 'nullable|integer|min:0',
+        ]);
+
+        if ($request->user()->isNot($user) && $request->user()->cannot('update_users')) {
+            abort(403, 'You are not authorized to update other user\'s profiles.');
+        }
+
+        // Make sure the user can update the verification
+        if ($request->has('verified') && $request->user()->cannot('update_users')) {
+            abort(403, 'You are not authorized to update your own verification.');
+        }
+
+        // Make sure current user can update their own drive storage
+        if ($request->has('allocated_drive_bytes') && $request->user()->cannot('update_users')) {
+            abort(403, 'You are not authorized to update your drive storage.');
+        }
+
+        $user->first_name = $request->input('first_name');
+        $user->last_name = $request->input('last_name');
+
+        if ($request->has('verified')) {
+            $user->email_verified_at = $request->input('verified') ? Carbon::now() : null;
+        }
+
+        if ($request->has('allocated_drive_bytes')) {
+            $user->allocated_drive_bytes = $request->input('allocated_drive_bytes');
+        }
+
+        $user->save();
+
+        return new UserResource($user);
+    }
+
+    /**
+     * Update a user's email address.
+     *
+     * @param  \Illuminate\Http\Request $request
+     * @param  \App\Models\User $user
+     * @return \Illuminate\Http\Response
+     */
+    public function updateEmail(Request $request, User $user)
+    {
+        $this->validate($request, [
+            'email' => 'required|email|max:255|unique:users,email',
+        ]);
+
+        if ($request->user()->isNot($user) && $request->user()->cannot('update_users')) {
+            abort(403, 'You are not authorized to update other users.');
+        }
+
+        $user->email = $request->input('email');
+        $user->slug = str_slug(explode('@', $request->input('email'))[0], '-');
+        $user->save();
+
+        return new UserResource($user);
+    }
+
+    /**
+     * Update a user's password.
+     *
+     * @param  \Illuminate\Http\Request $request
+     * @param  \App\Models\User $user
+     * @return \Illuminate\Http\Response
+     */
+    public function updatePassword(Request $request, User $user)
+    {
+        $this->validate($request, [
+            'current_password' => 'nullable|string',
+            'password' => 'required|string|confirmed|min:6',
+            'password_confirmation' => 'required|string|min:6',
+        ]);
+
+        if ($request->user()->isNot($user) && $request->user()->cannot('update_users')) {
+            abort(403, 'You are not authorized to update other users.');
+        }
+
+        if ($request->user()->cannot('update_users') && !$request->has('current_password')) {
+            abort(403, 'You must confirm your current password.');
+        }
+
+        if ($request->has('current_password')) {
+            if (!Hash::check($request->input('current_password'), $request->user()->password)) {
+                abort(401, 'Current password does not match.');
+            }
+        }
+
+        $user->password = bcrypt($request->input('password'));
+        $user->save();
 
         return new UserResource($user);
     }
