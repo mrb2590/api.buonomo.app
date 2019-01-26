@@ -22,7 +22,7 @@ class User extends JsonResource
             'first_name' => $this->first_name,
             'last_name' => $this->last_name,
             'email' => $this->email,
-            'slug' => $this->slug,
+            'username' => $this->username,
             'folder_id' => $this->folder_id,
             'allocated_drive_bytes' => $this->allocated_drive_bytes,
             'formatted_allocated_drive_bytes' => $this->formatted_allocated_drive_bytes,

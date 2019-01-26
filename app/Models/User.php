@@ -127,7 +127,7 @@ class User extends Authenticatable implements MustVerifyEmail
         }
 
         $folder = new Folder;
-        $folder->name = $this->slug;
+        $folder->name = $this->username;
         $folder->owned_by_id = $this->id;
         $folder->created_by_id = $this->id;
         $folder->updated_by_id = $this->id;

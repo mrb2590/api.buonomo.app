@@ -16,9 +16,11 @@ class CreateAvatarsTable extends Migration
         Schema::create('avatars', function (Blueprint $table) {
             $table->uuid('id');
             $table->uuid('user_id')->unique();
-            $table->string('style');
-            $table->string('accessories');
-            $table->string('clothes_type');
+            $table->string('avatar_style');
+            $table->string('accessories_type');
+            $table->string('clothe_type');
+            $table->string('clothe_color');
+            $table->string('graphic_type');
             $table->string('eyebrow_type');
             $table->string('eye_type');
             $table->string('facial_hair_type');

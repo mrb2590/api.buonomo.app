@@ -81,7 +81,7 @@ class UserController extends Controller
             return new UserResource($user->load($load));
         }
 
-        $searchableCols = ['first_name', 'last_name', 'email', 'slug'];
+        $searchableCols = ['first_name', 'last_name', 'email', 'username'];
         $sortableCols = array_merge($searchableCols, [
             'verified_at',
             'created_at',
@@ -120,7 +120,8 @@ class UserController extends Controller
         $this->validate($request, [
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:users',
+            'email' => 'required|string|email|max:255|unique:users',
+            'username' => 'required|string|max:30|unique:users|regex:/^[a-zA-Z0-9._-]{0,30}$/',
             'password' => 'required|string|min:6',
             'verified' => 'required|boolean',
             'allocated_drive_bytes' => 'nullable|integer|min:0',
@@ -134,7 +135,7 @@ class UserController extends Controller
         $user->first_name = $request->input('first_name');
         $user->last_name = $request->input('last_name');
         $user->email = $request->input('email');
-        $user->slug = str_slug(explode('@', $request->input('email'))[0], '-');
+        $user->username = $request->input('username');
         $user->password = bcrypt($request->input('password'));
         $user->email_verified_at = $request->input('verified') ? Carbon::now() : null;
         $user->allocated_drive_bytes = $request->input('allocated_drive_bytes');
@@ -159,6 +160,7 @@ class UserController extends Controller
             'first_name' => 'nullable|string|max:255',
             'last_name' => 'nullable|string|max:255',
             'email' => 'nullable|email|max:255|unique:users',
+            'username' => 'nullable|string|max:30|unique:users|regex:/^[a-zA-Z0-9._-]{0,30}$/',
             'current_password' => 'required_with:password,password_confirmation|string',
             'password' => 'required_with:current_password,password_confirmation|string|confirmed',
             'password_confirmation' => 'required_with:current_password,password|string|min:6',
@@ -190,10 +192,6 @@ class UserController extends Controller
             $data['password'] = bcrypt($data['password']);
         }
 
-        if ($request->has('email')) {
-            $user->slug = str_slug(explode('@', $data['email'])[0], '-');
-        }
-
         if ($request->has('verified')) {
             $user->email_verified_at = $request->input('verified') ? Carbon::now() : null;
         }
@@ -215,6 +213,7 @@ class UserController extends Controller
         $this->validate($request, [
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
+            'username' => 'required|string|max:30|unique:users|regex:/^[a-zA-Z0-9._-]{0,30}$/',
             'verified' => 'nullable|boolean',
             'allocated_drive_bytes' => 'nullable|integer|min:0',
         ]);
@@ -235,6 +234,7 @@ class UserController extends Controller
 
         $user->first_name = $request->input('first_name');
         $user->last_name = $request->input('last_name');
+        $user->username = $request->input('username');
 
         if ($request->has('verified')) {
             $user->email_verified_at = $request->input('verified') ? Carbon::now() : null;
@@ -248,10 +248,10 @@ class UserController extends Controller
 
         return new UserResource($user);
     }
-
+ 
     /**
      * Update a user's email address.
-     *
+     * 
      * @param  \Illuminate\Http\Request $request
      * @param  \App\Models\User $user
      * @return \Illuminate\Http\Response
@@ -259,7 +259,7 @@ class UserController extends Controller
     public function updateEmail(Request $request, User $user)
     {
         $this->validate($request, [
-            'email' => 'required|email|max:255|unique:users,email',
+            'email' => 'required|string|email|max:255|unique:users',
         ]);
 
         if ($request->user()->isNot($user) && $request->user()->cannot('update_users')) {
@@ -267,7 +267,6 @@ class UserController extends Controller
         }
 
         $user->email = $request->input('email');
-        $user->slug = str_slug(explode('@', $request->input('email'))[0], '-');
         $user->save();
 
         return new UserResource($user);

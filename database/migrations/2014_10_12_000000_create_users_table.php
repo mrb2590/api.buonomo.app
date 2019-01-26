@@ -18,7 +18,7 @@ class CreateUsersTable extends Migration
             $table->string('first_name');
             $table->string('last_name');
             $table->string('email')->unique();
-            $table->string('slug');
+            $table->string('username', 30)->unique();
             $table->string('password');
             $table->bigInteger('allocated_drive_bytes')->unsigned()->default(0);
             $table->bigInteger('used_drive_bytes')->unsigned()->default(0);

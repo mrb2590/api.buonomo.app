@@ -38,9 +38,11 @@ class Avatar extends Model
      */
     protected $fillable = [
         'user_id',
-        'style',
-        'accessories',
-        'clothes_type',
+        'avatar_style',
+        'accessories_type',
+        'clothe_type',
+        'clothe_color',
+        'graphic_type',
         'eyebrow_type',
         'eye_type',
         'facial_hair_type',
@@ -65,17 +67,17 @@ class Avatar extends Model
      *
      * @var array
      */
-    public static $styles = [
+    public static $avatarStyles = [
         'Circle',
         'Transparant',
     ];
 
     /**
-     * The avatar accessories.
+     * The accessories types.
      *
      * @var array
      */
-    public static $accessories = [
+    public static $accessoriesTypes = [
         'Blank',
         'Kurt',
         'Prescription01',
@@ -86,11 +88,11 @@ class Avatar extends Model
     ];
 
     /**
-     * The avatar clothes types.
+     * The clothe types.
      *
      * @var array
      */
-    public static $clothesTypes = [
+    public static $clotheTypes = [
         'BlazerShirt',
         'BlazerSweater',
         'CollarSweater',
@@ -103,7 +105,49 @@ class Avatar extends Model
     ];
 
     /**
-     * The avatar eyebrow types.
+     * The clothe colors.
+     *
+     * @var array
+     */
+    public static $clotheColors = [
+        'Black',
+        'Blue01',
+        'Blue02',
+        'Blue03',
+        'Gray01',
+        'Gray02',
+        'Heather',
+        'PastelBlue',
+        'PastelGreen',
+        'PastelOrange',
+        'PastelRed',
+        'PastelYellow',
+        'Pink',
+        'Red',
+        'White',
+    ];
+
+    /**
+     * The graphic types.
+     *
+     * @var array
+     */
+    public static $graphicTypes = [
+        'Bat',
+        'Cumbia',
+        'Deer',
+        'Diamond',
+        'Hola',
+        'Pizza',
+        'Resist',
+        'Selena',
+        'Bear',
+        'SkullOutline',
+        'Skull',
+    ];
+
+    /**
+     * The eyebrow types.
      *
      * @var array
      */
@@ -123,7 +167,7 @@ class Avatar extends Model
     ];
 
     /**
-     * The avatar eye types.
+     * The eye types.
      *
      * @var array
      */
@@ -143,7 +187,7 @@ class Avatar extends Model
     ];
 
     /**
-     * The avatar facial hair types.
+     * The facial hair types.
      *
      * @var array
      */
@@ -157,7 +201,7 @@ class Avatar extends Model
     ];
 
     /**
-     * The avatar facial hair colors.
+     * The facial hair colors.
      *
      * @var array
      */
@@ -173,7 +217,7 @@ class Avatar extends Model
     ];
 
     /**
-     * The avatar hair colors.
+     * The hair colors.
      *
      * @var array
      */
@@ -191,7 +235,7 @@ class Avatar extends Model
     ];
 
     /**
-     * The avatar mouth types.
+     * The mouth types.
      *
      * @var array
      */
@@ -211,7 +255,7 @@ class Avatar extends Model
     ];
 
     /**
-     * The avatar skin colors.
+     * The skin colors.
      *
      * @var array
      */
@@ -226,7 +270,7 @@ class Avatar extends Model
     ];
 
     /**
-     * The avatar top types.
+     * The top types.
      *
      * @var array
      */
@@ -278,9 +322,11 @@ class Avatar extends Model
         };
 
         $avatar = new Avatar;
-        $avatar->style = $rand('styles');
-        $avatar->accessories = $rand('accessories');
-        $avatar->clothes_type = $rand('clothesTypes');
+        $avatar->avatar_style = $rand('avatarStyles');
+        $avatar->accessories_type = $rand('accessoriesTypes');
+        $avatar->clothe_type = $rand('clotheTypes');
+        $avatar->clothe_color = $rand('clotheColors');
+        $avatar->graphic_type = $rand('graphicTypes');
         $avatar->eyebrow_type = $rand('eyebrowTypes');
         $avatar->eye_type = $rand('eyeTypes');
         $avatar->facial_hair_type = $rand('facialHairTypes');
@@ -301,9 +347,11 @@ class Avatar extends Model
     protected function getUrlAttribute()
     {
         $url = $this->baseUrl.'?';
-        $url .= 'avatarStyle='.urlencode($this->style).'&';
-        $url .= 'accessoriesType='.urlencode($this->accessories).'&';
-        $url .= 'clotheType='.urlencode($this->clothes_type).'&';
+        $url .= 'avatarStyle='.urlencode($this->avatar_style).'&';
+        $url .= 'accessoriesType='.urlencode($this->accessories_type).'&';
+        $url .= 'clotheType='.urlencode($this->clothe_type).'&';
+        $url .= 'clotheColor='.urlencode($this->clothe_color).'&';
+        $url .= 'graphicType='.urlencode($this->graphic_type).'&';
         $url .= 'eyebrowType='.urlencode($this->eyebrow_type).'&';
         $url .= 'eyeType='.urlencode($this->eye_type).'&';
         $url .= 'facialHairColor='.urlencode($this->facial_hair_color).'&';

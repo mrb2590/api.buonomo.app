@@ -53,6 +53,7 @@ class RegisterController extends Controller
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
+            'username' => 'required|string|max:30|unique:users|regex:/^[a-zA-Z0-9._-]{0,30}$/',
             'password' => 'required|string|min:6|confirmed',
         ]);
     }
@@ -70,7 +71,7 @@ class RegisterController extends Controller
         $user->first_name = $data['first_name'];
         $user->last_name = $data['last_name'];
         $user->email = $data['email'];
-        $user->slug = str_slug(explode('@', $data['email'])[0], '-');
+        $user->username = $data['username'];
         $user->password = bcrypt($data['password']);
 
         $user->save();

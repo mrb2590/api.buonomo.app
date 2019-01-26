@@ -21,7 +21,7 @@ $factory->define(User::class, function(Faker $faker) {
         'first_name' => $faker->firstName,
         'last_name' => $faker->lastName,
         'email' => $email,
-        'slug' => str_slug(explode('@', $email)[0], '-'),
+        'username' => $faker->userName.$faker->randomNumber(),
         'password' => bcrypt('testing123'),
     ];
 });
