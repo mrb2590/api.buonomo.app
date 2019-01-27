@@ -83,6 +83,7 @@ class UserController extends Controller
 
         $searchableCols = ['first_name', 'last_name', 'email', 'username'];
         $sortableCols = array_merge($searchableCols, [
+            'username',
             'verified_at',
             'created_at',
             'allocated_drive_bytes',
@@ -121,7 +122,7 @@ class UserController extends Controller
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
-            'username' => 'required|string|max:30|unique:users|regex:/^[a-zA-Z0-9._-]{0,30}$/',
+            'username' => 'required|string|max:30|regex:/^[a-zA-Z0-9._-]{0,30}$/',
             'password' => 'required|string|min:6',
             'verified' => 'required|boolean',
             'allocated_drive_bytes' => 'nullable|integer|min:0',
@@ -143,60 +144,7 @@ class UserController extends Controller
 
         // Create user's root folder
         $user->createRootFolder();
-
-        return new UserResource($user);
-    }
-
-    /**
-     * Update a user.
-     *
-     * @param  \Illuminate\Http\Request $request
-     * @param  \App\Models\User $user
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, User $user)
-    {
-        $this->validate($request, [
-            'first_name' => 'nullable|string|max:255',
-            'last_name' => 'nullable|string|max:255',
-            'email' => 'nullable|email|max:255|unique:users',
-            'username' => 'nullable|string|max:30|unique:users|regex:/^[a-zA-Z0-9._-]{0,30}$/',
-            'current_password' => 'required_with:password,password_confirmation|string',
-            'password' => 'required_with:current_password,password_confirmation|string|confirmed',
-            'password_confirmation' => 'required_with:current_password,password|string|min:6',
-            'verified' => 'nullable|boolean',
-            'allocated_drive_bytes' => 'nullable|integer|min:0',
-        ]);
-
-        if ($request->user()->isNot($user) && $request->user()->cannot('update_users')) {
-            abort(403, 'You are not authorized to update other users.');
-        }
-
-        // Make sure current user set other's
-        if ($request->has('verified') && $request->user()->cannot('update_users')) {
-            abort(403, 'You are not authorized to update your own verification.');
-        }
-
-        // Make sure current user can update their own drive storage
-        if ($request->has('allocated_drive_bytes') && $request->user()->cannot('update_users')) {
-            abort(403, 'You are not authorized to update your drive storage.');
-        }
-
-        $data = $request->all();
-
-        if ($request->has('password')) {
-            if (!Hash::check($data['current_password'], $request->user()->password)) {
-                abort(401, 'Current password does not match.');
-            }
-
-            $data['password'] = bcrypt($data['password']);
-        }
-
-        if ($request->has('verified')) {
-            $user->email_verified_at = $request->input('verified') ? Carbon::now() : null;
-        }
-
-        $user->fill($data)->save();
+        $user->createRandomAvatar();
 
         return new UserResource($user);
     }
@@ -210,10 +158,12 @@ class UserController extends Controller
      */
     public function updateProfile(Request $request, User $user)
     {
+        $unique = $user->username != $request->input('username') ? '|unique:users' : '';
+
         $this->validate($request, [
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
-            'username' => 'required|string|max:30|unique:users|regex:/^[a-zA-Z0-9._-]{0,30}$/',
+            'username' => 'nullable|string|max:30|regex:/^[a-zA-Z0-9._-]{0,30}$/'.$unique,
             'verified' => 'nullable|boolean',
             'allocated_drive_bytes' => 'nullable|integer|min:0',
         ]);
@@ -258,8 +208,10 @@ class UserController extends Controller
      */
     public function updateEmail(Request $request, User $user)
     {
+        $unique = $user->email != $request->input('email') ? '|unique:users' : '';
+
         $this->validate($request, [
-            'email' => 'required|string|email|max:255|unique:users',
+            'email' => 'required|string|email|max:255'.$unique,
         ]);
 
         if ($request->user()->isNot($user) && $request->user()->cannot('update_users')) {

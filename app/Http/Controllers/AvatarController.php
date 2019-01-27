@@ -130,7 +130,6 @@ class AvatarController extends Controller
             abort(403, 'You are not authorized to update other users\'s avatars.');
         }
 
-        $user->avatar->user_id = $request->user()->id;
         $user->avatar->avatar_style = $request->input('avatar_style');
         $user->avatar->accessories_type = $request->input('accessories_type');
         $user->avatar->clothe_type = $request->input('clothe_type');
