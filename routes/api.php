@@ -50,6 +50,12 @@ Route::prefix('v1')->group(function () {
     // Restore a trashed user
     Route::post('/users/{trashedUser}/restore', 'UserController@restore')->name('users.restore');
 
+    /* User Aggreated Data */
+
+    // Fetch the current user
+    Route::get('/users/aggregate/created', 'UserAggregateController@fetchCreated')
+        ->name('users.aggregate.created.fetch');
+
     /* Roles */
 
     // Fetch the all roles
