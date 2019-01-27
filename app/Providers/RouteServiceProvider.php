@@ -28,16 +28,26 @@ class RouteServiceProvider extends ServiceProvider
     {
         parent::boot();
 
+        Route::bind('username', function ($value) {
+            $user = User::where('username', $value)->first();
+
+            if (!$user) {
+                return User::find($value) ?? abort(404);
+            }
+
+            return $user;
+        });
+
         Route::bind('trashedUser', function ($value) {
-            return User::onlyTrashed()->find($value);
+            return User::onlyTrashed()->find($value) ?? abort(404);
         });
 
         Route::bind('trashedFolder', function ($value) {
-            return Folder::onlyTrashed()->find($value);
+            return Folder::onlyTrashed()->find($value) ?? abort(404);
         });
 
         Route::bind('trashedFile', function ($value) {
-            return File::onlyTrashed()->find($value);
+            return File::onlyTrashed()->find($value) ?? abort(404);
         });
     }
 

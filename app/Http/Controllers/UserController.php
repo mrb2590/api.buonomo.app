@@ -122,10 +122,11 @@ class UserController extends Controller
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
-            'username' => 'required|string|max:30|regex:/^[a-zA-Z0-9._-]{0,30}$/',
+            'username' => 'required|string|max:30|regex:/^[a-zA-Z0-9._-]{0,30}$/|unique:users',
             'password' => 'required|string|min:6',
             'verified' => 'required|boolean',
             'allocated_drive_bytes' => 'nullable|integer|min:0',
+            'roles' => 'nullable|array|exists:roles,name',
         ]);
 
         if ($request->user()->cannot('create_users')) {
@@ -142,9 +143,16 @@ class UserController extends Controller
         $user->allocated_drive_bytes = $request->input('allocated_drive_bytes');
         $user->save();
 
-        // Create user's root folder
         $user->createRootFolder();
         $user->createRandomAvatar();
+
+        if ($request->has('roles')) {
+            foreach ($request->input('roles') as $role) {
+                $user->assignRole($role);
+            }
+
+            $user->load('roles');
+        }
 
         return new UserResource($user);
     }
@@ -166,6 +174,7 @@ class UserController extends Controller
             'username' => 'nullable|string|max:30|regex:/^[a-zA-Z0-9._-]{0,30}$/'.$unique,
             'verified' => 'nullable|boolean',
             'allocated_drive_bytes' => 'nullable|integer|min:0',
+            'roles' => 'nullable|array|exists:roles,name',
         ]);
 
         if ($request->user()->isNot($user) && $request->user()->cannot('update_users')) {
@@ -182,6 +191,11 @@ class UserController extends Controller
             abort(403, 'You are not authorized to update your drive storage.');
         }
 
+        // Make sure current user can update their own drive storage
+        if ($request->has('roles') && $request->user()->cannot('update_users')) {
+            abort(403, 'You are not authorized to update your own roles.');
+        }
+
         $user->first_name = $request->input('first_name');
         $user->last_name = $request->input('last_name');
         $user->username = $request->input('username');
@@ -192,6 +206,18 @@ class UserController extends Controller
 
         if ($request->has('allocated_drive_bytes')) {
             $user->allocated_drive_bytes = $request->input('allocated_drive_bytes');
+        }
+
+        if ($request->has('roles')) {
+            foreach ($user->roles as $role) {
+                $user->removeRole($role->name);
+            }
+
+            foreach ($request->input('roles') as $role) {
+                $user->assignRole($role);
+            }
+
+            $user->load('roles');
         }
 
         $user->save();

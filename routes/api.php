@@ -25,7 +25,7 @@ Route::prefix('v1')->group(function () {
     Route::get('/user', 'UserController@fetchCurrent')->name('user.fetch');
 
     // Fetch all or a single user
-    Route::get('/users/{user?}', 'UserController@fetch')->name('users.fetch');
+    Route::get('/users/{username?}', 'UserController@fetch')->name('users.fetch');
 
     // Create a user
     Route::post('/users', 'UserController@store')->name('users.create');
@@ -49,6 +49,11 @@ Route::prefix('v1')->group(function () {
 
     // Restore a trashed user
     Route::post('/users/{trashedUser}/restore', 'UserController@restore')->name('users.restore');
+
+    /* Roles */
+
+    // Fetch the all roles
+    Route::get('/roles', 'RoleController@fetch')->name('roles.fetch');
 
     /* User roles */
 
