@@ -67,7 +67,9 @@ class UserAggregateController extends Controller
             // Search of the date
             foreach ($data as $item) {
                 if (strtolower($item->created_at) == strtolower($day)) {
-                    $dates[$i]['created_at'] = $item->created_at;
+                    $dates[$i]['created_at'] = $time == 'hours'
+                        ? strtolower($item->created_at)
+                        : $item->created_at;
                     $dates[$i]['total'] = $item->total;
                     break;
                 }
