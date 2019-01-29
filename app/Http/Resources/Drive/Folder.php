@@ -32,6 +32,9 @@ class Folder extends JsonResource
             'updated_by' => new PublicUserResource($this->updated_by),
             'folder' => new FolderResource($this->whenLoaded('folder')),
             'folders' => FolderResource::collection($this->whenLoaded('folders')),
+            'folders_recursive' => FolderResource::collection(
+                $this->whenLoaded('folders_recursive')
+            ),
             'files' => FileResource::collection($this->whenLoaded('files')),
             'files_count' => $this->filesCount,
             'folders_count' => $this->foldersCount,

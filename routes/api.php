@@ -102,6 +102,10 @@ Route::prefix('v1')->group(function () {
     Route::get('/user/drive/folder', 'Drive\FolderController@fetchCurrent')
         ->name('user.drive.folder.fetch');
 
+        // Fetch the current user's folder tree
+        Route::get('/user/drive/folder/tree', 'Drive\FolderController@fetchCurrentTree')
+            ->name('user.drive.folder.tree.fetch');
+
     // Fetch all or a single folder
     Route::get('/drive/folders/{folder?}', 'Drive\FolderController@fetch')
         ->name('drive.folders.fetch');

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Drive;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Drive\Folder as FolderResource;
+use App\Http\Resources\Drive\FolderTreeFolder as FolderTreeFolderResource;
 use App\Models\Drive\Folder;
 use App\Traits\HasPaging;
 use Illuminate\Http\Request;
@@ -31,6 +32,18 @@ class FolderController extends Controller
     public function fetchCurrent(Request $request)
     {
         return new FolderResource($request->user()->folder);
+    }
+
+    /**
+     * Return the current user's root folder tree.
+     *
+     * @param  \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\Response
+     */
+    public function fetchCurrentTree(Request $request)
+    {
+        $request->user()->folder->load('folders_recursive');
+        return new FolderTreeFolderResource($request->user()->folder);
     }
 
     /**

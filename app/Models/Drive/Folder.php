@@ -158,6 +158,14 @@ class Folder extends Model
     }
 
     /**
+     * Get the child folders recursively.
+     */
+    public function folders_recursive()
+    {
+        return $this->folders()->with('folders_recursive');
+    }
+
+    /**
      * Get the owner of the folder.
      */
     public function owned_by()
