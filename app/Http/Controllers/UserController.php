@@ -6,8 +6,12 @@ use App\Http\Resources\User as UserResource;
 use App\Models\User;
 use App\Traits\HasPaging;
 use Carbon\Carbon;
+use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Str;
 
 class UserController extends Controller
 {
@@ -20,7 +24,10 @@ class UserController extends Controller
      */
     public function __construct()
     {
-        $this->middleware(['auth:api', 'verified']);
+        $this->middleware(['auth:api', 'verified'])->except([
+            'forgotPassword',
+            'resetPassword'
+        ]);
     }
 
     /**
@@ -123,7 +130,7 @@ class UserController extends Controller
             'last_name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'username' => 'required|string|max:30|regex:/^[a-zA-Z0-9._-]{0,30}$/|unique:users',
-            'password' => 'required|string|min:6',
+            'password' => 'required|string|confirmed|min:6',
             'verified' => 'required|boolean',
             'allocated_drive_bytes' => 'nullable|integer|min:0',
             'roles' => 'nullable|array|exists:roles,name',
@@ -142,6 +149,10 @@ class UserController extends Controller
         $user->email_verified_at = $request->input('verified') ? Carbon::now() : null;
         $user->allocated_drive_bytes = $request->input('allocated_drive_bytes');
         $user->save();
+
+        if (!$user->email_verified_at && !App::environment('production')) {
+            $user->sendEmailVerificationNotification();
+        }
 
         $user->createRootFolder();
         $user->createRandomAvatar();
@@ -337,5 +348,53 @@ class UserController extends Controller
         $trashedUser->restore();
 
         return new UserResource($trashedUser);
+    }
+
+    /**
+     * Send reset password email.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function forgotPassword(Request $request)
+    {
+        $this->validate($request, ['email' => 'required|email']);
+
+        Password::broker()->sendResetLink($request->only('email'));
+    }
+
+    /**
+     * Reset a user's password.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  string $token
+     * @return \Illuminate\Http\Response
+     */
+    public function resetPassword(Request $request, $token)
+    {
+        $this->validate($request, [
+            'email' => 'required|email',
+            'password' => 'required|confirmed|min:6'
+        ]);
+
+        $credentials = array_merge($request->only(
+            'email', 'password', 'password_confirmation'
+        ), ['token' => $token]);
+
+        $response = Password::broker()->reset(
+            $credentials, function($user, $password) {
+                $user->password = Hash::make($password);
+                $user->setRememberToken(Str::random(60));
+                $user->save();
+
+                event(new PasswordReset($user));
+
+                Auth::guard()->login($user);
+            }
+        );
+
+        if ($response != Password::PASSWORD_RESET) {
+            abort('401', 'The token is invalid for this email address.');
+        }
     }
 }

@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\Avatar;
 use App\Models\Drive\Folder;
 use App\Models\Drive\Server;
+use App\Notifications\ResetPassword;
 use App\Traits\HasRoles;
 use App\Traits\HasUuid;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -159,5 +160,13 @@ class User extends Authenticatable implements MustVerifyEmail
         $this->avatar->save();
 
         return $this->avatar;
+    }
+
+    /**
+     * Send a password reset email to the user.
+     */
+    public function sendPasswordResetNotification($token)
+    {
+        $this->notify(new ResetPassword($token));
     }
 }

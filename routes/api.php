@@ -50,6 +50,14 @@ Route::prefix('v1')->group(function () {
     // Restore a trashed user
     Route::post('/users/{trashedUser}/restore', 'UserController@restore')->name('users.restore');
 
+    // Send reset password email
+    Route::post('/users/password/forgot', 'UserController@forgotPassword')
+        ->name('users.password.forgot');
+
+    // Reset user's password
+    Route::post('/users/password/reset/{token}', 'UserController@resetPassword')
+        ->name('users.password.reset');
+
     /* User Aggreated Data */
 
     // Fetch the current user
