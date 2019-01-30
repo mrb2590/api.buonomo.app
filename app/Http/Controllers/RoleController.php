@@ -26,10 +26,6 @@ class RoleController extends Controller
      */
     public function fetch(Request $request)
     {
-        if ($request->user()->cannot('fetch_user_roles')) {
-            abort(403, 'Unauthorized.');
-        }
-
         return RoleResource::collection(Role::all());
     }
 }
