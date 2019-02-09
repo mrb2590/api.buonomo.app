@@ -26,6 +26,7 @@ return [
      */
 
     'cameras' => [
-        'front_door_01' => env('SURVEILLANCE_CAMERA01'),
+        'mikerpi01' => env('SURVEILLANCE_CAMERA01'),
+        'mikerpi02' => env('SURVEILLANCE_CAMERA02'),
     ],
 ];
