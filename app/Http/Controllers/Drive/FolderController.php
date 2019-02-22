@@ -43,7 +43,28 @@ class FolderController extends Controller
     public function fetchCurrentTree(Request $request)
     {
         $request->user()->folder->load('folders_recursive');
+
         return new FolderTreeFolderResource($request->user()->folder);
+    }
+
+    /**
+     * Return the folder tree for any folder.
+     *
+     * @param  \Illuminate\Http\Request $request
+     * @param  \App\Models\Drive\Folder $folder
+     * @return \Illuminate\Http\Response
+     */
+    public function fetchTree(Request $request, Folder $folder)
+    {
+        if ($request->user()->id !== $folder->owned_by_id &&
+            $request->user()->cannot('fetch_folders')
+        ) {
+            abort(403, 'You\'re not authorized to fetch folders you don\'t own.');
+        }
+
+        $folder->load('folders_recursive');
+
+        return new FolderTreeFolderResource($folder);
     }
 
     /**
