@@ -18,18 +18,16 @@ class FolderTreeFolder extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
-            'folder_id' => $this->folder_id,
-            'size' => $this->size,
-            'formatted_size' => $this->formatted_size,
-            'path' => $this->path,
-            'folder' => new FolderTreeFolderResource($this->whenLoaded('folder')),
+            // 'folder_id' => $this->folder_id,
+            // 'path' => $this->path,
+            // 'folder' => new FolderTreeFolderResource($this->whenLoaded('folder')),
             'children' => FolderTreeFolderResource::collection(
                 $this->whenLoaded('folders_recursive')
             ),
-            'files_count' => $this->filesCount,
-            'folders_count' => $this->foldersCount,
-            'total_files' => $this->totalFilesCount,
-            'total_folders' => $this->totalFoldersCount,
+            // 'files_count' => $this->filesCount,
+            // 'folders_count' => $this->foldersCount,
+            // 'total_files' => $this->totalFilesCount,
+            // 'total_folders' => $this->totalFoldersCount,
         ];
     }
 }

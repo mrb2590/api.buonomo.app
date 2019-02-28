@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Drive;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Drive\File as FileResource;
 use App\Http\Resources\Drive\Folder as FolderResource;
 use App\Http\Resources\Drive\FolderTreeFolder as FolderTreeFolderResource;
 use App\Models\Drive\Folder;
@@ -146,7 +147,7 @@ class FolderController extends Controller
 
         $limit = $this->validatePaging($request, Folder::class);
 
-        return FolderResource::collection($folder->files()->paginate($limit));
+        return FileResource::collection($folder->files()->paginate($limit));
     }
 
     /**
